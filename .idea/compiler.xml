@@ -18,4 +18,7 @@
       </profile>
     </annotationProcessing>
   </component>
+  <component name="ElixirCompilerOptions">
+    <useMixCompiler>true</useMixCompiler>
+  </component>
 </project>

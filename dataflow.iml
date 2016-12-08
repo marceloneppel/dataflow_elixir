@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="ELIXIR_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="false">
+    <output url="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/_build/dev/lib/dataflow/ebin" />
+    <output-test url="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/_build/test/lib/dataflow/ebin" />
+    <exclude-output />
+    <content url="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir">
+      <sourceFolder url="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib" isTestSource="false" />
+      <sourceFolder url="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/test" isTestSource="true" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>
