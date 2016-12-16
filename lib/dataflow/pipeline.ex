@@ -80,7 +80,7 @@ defmodule Dataflow.Pipeline do
 
   end
 
-  def apply_root_transform(%__MODULE__{pid: pid} = p, transform, opts) do
+  def apply_root_transform(%__MODULE__{pid: pid} = p, transform, opts \\ []) do
     #TODO: ensure transform supports being root
     # PTransform.root_transform? transform
 
@@ -151,12 +151,14 @@ defmodule Dataflow.Pipeline do
     |> State.add_values(new_values)
     |> State.add_transforms(new_transforms)
 
-    state = State.add_transforms( State.add_values(state, new_values), new_transforms)
-
     {:reply, output, state}
   end
 
-  def do_apply_transform(nested_input, transform) do
+  def apply_nested_transform(nested_input, transform, opts \\ []) do
+    do_apply_transform(nested_input, transform, opts)
+  end
+
+  def do_apply_transform(nested_input, transform, opts \\ []) do
     state = nested_input.state
 
     # Get an ID for our new transform
