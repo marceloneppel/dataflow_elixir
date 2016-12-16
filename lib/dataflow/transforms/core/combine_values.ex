@@ -1,5 +1,5 @@
 defmodule Dataflow.Transforms.Core.CombineValues do
-  use Dataflow.PTransform, make_fun: {:combine_values, 1}
+  use Dataflow.PTransform, make_fun: [combine_values: 1]
 
   defstruct combine_fn: nil #todo tags? enforce keys
   alias Dataflow.Transforms.Util.CombineFn

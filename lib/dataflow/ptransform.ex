@@ -22,14 +22,13 @@ defmodule Dataflow.PTransform do
     using =
       case Keyword.get opts, :make_fun do
         nil -> []
-        {fun, arity} when is_atom(fun) and is_integer(arity) ->
+        funs when is_list(funs) ->
           [
             quote do
               defmacro __using__(_opts) do
-                fun = unquote(fun)
-                arity = unquote(arity)
+                funs = unquote(funs)
                 quote do
-                  import unquote(__MODULE__), only: [{unquote(fun), unquote(arity)}]
+                  import unquote(__MODULE__), only: unquote(funs)
                 end
               end
             end
