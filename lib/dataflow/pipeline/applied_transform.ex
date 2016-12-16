@@ -1,6 +1,6 @@
 defmodule Dataflow.Pipeline.AppliedTransform do
 
-  defstruct [:pipeline, :id, :label, :inputs, :parent, :parts, :transform]
+  defstruct [:pipeline, :id, :label, :input, :output, :parent, :parts, :transform]
 
 
 end

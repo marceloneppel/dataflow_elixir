@@ -12,6 +12,9 @@ defmodule Dataflow.Pipeline do
 
   alias Dataflow.PValue
   alias Dataflow.PTransform
+  alias Dataflow.Pipeline.{AppliedTransform, NestedState}
+
+  @opaque id :: pos_integer
 
   defstruct pid: nil
 
@@ -42,48 +45,13 @@ defmodule Dataflow.Pipeline do
     end
   end
 
-  defmodule NestedState do
-    defstruct stack: [], new_values: [], new_transforms: [], fresh_id: fn -> raise "Must pass a fresh ID generator" end
-
-    def start_link(fresh_id) do
-      Agent.start_link(fn -> %__MODULE__{fresh_id: fresh_id} end)
-    end
-
-    def push_context(pid, cid) do
-      Agent.update(pid, fn %__MODULE__{stack: stack} = state -> %{state | stack: [cid | stack] } end)
-    end
-
-    def pop_context(pid) do
-      Agent.get_and_update(pid, fn %__MODULE__{stack: [cid | ss]} = state -> {cid, %{state | stack: ss}} end)
-    end
-
-    def peek_context(pid) do
-      Agent.get(pid, fn %__MODULE__{stack: [cid | _]} -> cid end)
-    end
-
-    def flush(pid) do
-      out = Agent.get(pid, fn %__MODULE__{new_values: values, new_transforms: transforms} -> {new_values, new_transforms} end)
-      Agent.stop(pid)
-      out
-    end
-
-    def fresh_id(pid) do
-      Agent.get(pid, fn %__MODULE__{fresh_id: fresh_id} -> fresh_id.() end)
-    end
-
-    def add_value(pid, value) do
-      Agent.update(pid, fn %__MODULE__{new_values: vs} = state -> %{state | new_values: [value | vs]} end)
-    end
-
-    def add_transform(pid, transform) do
-      Agent.update(pid, fn %__MODULE__{new_values: vs} = state -> %{state | new_transforms: [transform | vs]} end)
-    end
-  end
-
   defmodule NestedInput do
+    @type t :: %__MODULE__{
+      value: PValue.value,
+      state: NestedState.t
+    }
+
     defstruct [:value, :state]
-
-
   end
 
 
@@ -94,7 +62,7 @@ defmodule Dataflow.Pipeline do
   def new(opts \\ []) do
     # TODO maybe raise own exception on failure
     {:ok, pid} = GenServer.start_link(__MODULE__, opts)
-    %__MODULE__{pid}
+    %__MODULE__{pid: pid}
   end
 
   def destroy(pipeline) do
@@ -180,8 +148,8 @@ defmodule Dataflow.Pipeline do
 
     # Add new values and transforms to the state
     state = state
-    |> State.add_values new_values
-    |> State.add_transforms new_transforms
+    |> State.add_values(new_values)
+    |> State.add_transforms(new_transforms)
 
     state = State.add_transforms( State.add_values(state, new_values), new_transforms)
 
@@ -202,7 +170,7 @@ defmodule Dataflow.Pipeline do
 
     output = PTransform.apply transform, nested_input, id # {id, transform}
 
-    NestedState.add_value(state, output)
+    NestedState.add_value(state, output) #handled by fresh_pvalue?
     NestedState.add_transform(state,
       %AppliedTransform{
         id: id,

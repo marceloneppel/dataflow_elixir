@@ -11,7 +11,9 @@ defmodule Dataflow.PValue do
     (3) Has a value which is meaningful if the transform was executed.
   """
 
-  defstruct :pipeline, :id, :label, :producer, type: :normal
+  @type value :: any
+
+  defstruct pipeline: :floating, id: nil, label: "", producer: nil, type: :normal
   #TODO enforce keys
 
 end
