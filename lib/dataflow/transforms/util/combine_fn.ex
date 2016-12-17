@@ -45,4 +45,27 @@ defmodule Dataflow.Transforms.Util.CombineFn do
   end
 
    #todo from single callable?
+
+   # These operate in tuples so that they're easily pipeable.
+
+   def create_accumulator(%__MODULE__{create_accumulator: ca} = function) do
+     {function, ca.()}
+   end
+
+   def add_input({%__MODULE__{add_input: ai} = function, acc}, input) do
+     {function, ai.(acc, input)}
+   end
+
+   #todo make this only be the default impl?
+   def add_inputs({%__MODULE__{} = function, acc}, inputs) do
+     Enum.reduce(inputs, acc, fn el, acc -> add_input {function, acc}, el end)
+   end
+
+   def merge_accumulators({%__MODULE__{merge_accumulators: ma} = function, acc1}, acc2) do
+     {function, ma.(acc1, acc2)}
+   end
+
+   def extract_output({%__MODULE__{extract_output: eo}, acc}) do
+     eo.(acc)
+   end
 end

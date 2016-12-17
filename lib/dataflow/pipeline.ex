@@ -124,14 +124,12 @@ defmodule Dataflow.Pipeline do
     {:reply, Map.has_key?(state.values, value), state}
   end
 
-  def handle_call({:apply_transform, value, transform, opts}, _from, state) do
+  def handle_call({:apply_transform, value, transform, _opts}, _from, state) do
     #TODO: verify value is correct etc
 
     #TODO: for now assume value is a single PValue and not a composite
 
     # Make a new transform
-    # First generate a fresh ID for it
-    transform_id = fresh_id(state)
 
     #TODO: take account of labels and so forth
     #TODO: factor out non-critical section code for better concurrency
@@ -154,11 +152,21 @@ defmodule Dataflow.Pipeline do
     {:reply, output, state}
   end
 
+  def handle_call({:add_value, value}, _from, state) do
+    #TODO: ensure value is value
+
+    id = fresh_id(state)
+
+    new_value = %{value | id: id}
+
+    {:reply, new_value, State.add_value(state, new_value)}
+  end
+
   def apply_nested_transform(nested_input, transform, opts \\ []) do
     do_apply_transform(nested_input, transform, opts)
   end
 
-  def do_apply_transform(nested_input, transform, opts \\ []) do
+  defp do_apply_transform(nested_input, transform, _opts \\ []) do
     state = nested_input.state
 
     # Get an ID for our new transform
@@ -170,7 +178,7 @@ defmodule Dataflow.Pipeline do
     # Make ourselves the new context
     NestedState.push_context(state, id)
 
-    output = PTransform.apply transform, nested_input, id # {id, transform}
+    output = PTransform.apply transform, nested_input # {id, transform}
 
     NestedState.add_value(state, output) #handled by fresh_pvalue?
     NestedState.add_transform(state,
@@ -187,15 +195,5 @@ defmodule Dataflow.Pipeline do
     unless NestedState.pop_context(state) == id, do: raise "Invariant error occurred: nesting context corrupted"
 
     output
-  end
-
-  def handle_call({:add_value, value}, _from, state) do
-    #TODO: ensure value is value
-
-    id = fresh_id(state)
-
-    new_value = %{value | id: id}
-
-    {:reply, new_value, State.add_value(state, new_value)}
   end
 end

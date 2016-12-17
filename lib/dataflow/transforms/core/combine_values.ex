@@ -14,18 +14,18 @@ defmodule Dataflow.Transforms.Core.CombineValues do
 
   def combine_values(fun), do: %__MODULE__{combine_fn: fun}
 
-  defp combine_do_fn(%CombineFn{} = fun) when is_function(fun) do
+  defp combine_do_fn(%CombineFn{} = fun) do
     alias Dataflow.Transforms.Util.DoFn
 
     %DoFn{process:
-      fn {key, enum}, timestamp, windows, label, state ->
+      fn {key, enum}, _timestamp, _windows, _label, _state ->
         # Expected elements input to this DoFn are 2-tuples of the form
         # `{key, enum}`, with `iter` an enumerable of all the values associated with `key`
         # in the input PCollection.
 
         combined = CombineFn.create_accumulator(fun)
-        |> CombineFn.add_inputs(fun, enum)
-        |> CombineFn.extract_output(fun)
+        |> CombineFn.add_inputs(enum)
+        |> CombineFn.extract_output
 
         {key, combined}
       end

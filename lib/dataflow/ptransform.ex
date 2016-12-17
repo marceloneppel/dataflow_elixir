@@ -3,7 +3,7 @@ defmodule Dataflow.PTransform do
 
   """
 
-  alias Dataflow.Pipeline.NestedInput
+  alias Dataflow.Pipeline.{NestedInput, NestedState}
   alias Dataflow.PValue
 
   @callback apply(transform :: struct, input :: Dataflow.Pipeline.NestedState.t) :: Dataflow.PValue.value
@@ -35,17 +35,37 @@ defmodule Dataflow.PTransform do
           ]
       end
 
-    quote do unquote_splicing(code ++ using) end
+    derive =
+      case Keyword.get opts, :no_protocol, false do
+        true -> []
+        false ->
+          [
+            quote do
+              defimpl Dataflow.PTransform.Protocol do
+                def apply(data, input) do
+                  __MODULE__.apply(data, input)
+                end
+              end
+            end
+          ]
+        _ -> raise "`no_protocol` options must be `true` or `false`"
+      end
+
+    quote do unquote_splicing(code ++ using ++ derive) end
   end
 
   def fresh_pvalue(%NestedInput{state: state}) do
     #todo LABEL????
 
     %PValue{
-      id: NestedInput.fresh_id(state),
+      id: NestedState.fresh_id(state),
       #label: ???,
-      producer: NestedInput.peek_context(state)
+      producer: NestedState.peek_context(state)
     }
+  end
+
+  def apply(transform, nested_input) do
+      Dataflow.PTransform.Protocol.apply transform, nested_input
   end
 
 end

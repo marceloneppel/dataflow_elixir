@@ -12,7 +12,7 @@ defmodule Dataflow.Transforms.Core.CombineGlobally do
     input
     #~> "KeyWithVoid" -- add_input_types(...)
     ~> "CombinePerKey" -- combine_per_key(fun)
-    ~> "UnKey" -- map(fn {k, v} -> v end)
+    ~> "UnKey" -- map(fn {_k, v} -> v end)
     combined
   end
 end
