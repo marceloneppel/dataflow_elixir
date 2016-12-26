@@ -1,4 +1,4 @@
-defmodule Dataflow.Transforms.Util.DoFn do
+defmodule Dataflow.Transforms.Fns.DoFn do
   @moduledoc """
   A structure and behaviour encapsulating the parameters to a transform with custom processing, e.g. a `ParDo`. Essentially a map operation with custom start/end bundle logic.
   """

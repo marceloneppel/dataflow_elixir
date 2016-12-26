@@ -2,7 +2,7 @@ defmodule Dataflow.Transforms.Core.CombineValues do
   use Dataflow.PTransform, make_fun: [combine_values: 1]
 
   defstruct combine_fn: nil #todo tags? enforce keys
-  alias Dataflow.Transforms.Util.CombineFn
+  alias Dataflow.Transforms.Fns.CombineFn
 
   def apply(%__MODULE__{combine_fn: %CombineFn{} = fun}, input) do
     use Dataflow.Transforms.Core.ParDo
@@ -15,7 +15,7 @@ defmodule Dataflow.Transforms.Core.CombineValues do
   def combine_values(fun), do: %__MODULE__{combine_fn: fun}
 
   defp combine_do_fn(%CombineFn{} = fun) do
-    alias Dataflow.Transforms.Util.DoFn
+    alias Dataflow.Transforms.Fns.DoFn
 
     %DoFn{process:
       fn {key, enum}, _timestamp, _windows, _label, _state ->

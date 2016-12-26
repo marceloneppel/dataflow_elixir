@@ -4,7 +4,7 @@ defmodule Dataflow.Transforms.Core do
   def flat_map(fun) when is_function(fun) do
    #todo labels?
    fun
-   |> Dataflow.Transforms.Util.DoFn.from_function
+   |> Dataflow.Transforms.Fns.DoFn.from_function
    |> Dataflow.Transforms.Core.ParDo.par_do
   end
 

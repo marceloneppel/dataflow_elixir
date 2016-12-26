@@ -1,4 +1,4 @@
-defmodule Dataflow.Transforms.Util.CombineFn do
+defmodule Dataflow.Transforms.Fns.CombineFn do
   @moduledoc """
   A CombineFn specifies how multiple values in all or part of a PCollection can
   be merged into a single value---essentially providing the same kind of
@@ -27,6 +27,11 @@ defmodule Dataflow.Transforms.Util.CombineFn do
     merge_accumulators: (acc, acc -> acc),
     extract_output: (acc -> any)
   }
+
+  @callback create_accumulator() :: acc
+  @callback add_input(acc :: acc, el :: el) :: acc
+  @callback merge_accumulators(acc1 :: acc, acc2 :: acc) :: acc
+  @callback extract_output(acc :: acc) :: any
 
   defstruct \
     create_accumulator: nil,
