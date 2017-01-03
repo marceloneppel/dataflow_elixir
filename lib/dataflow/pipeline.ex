@@ -14,6 +14,8 @@ defmodule Dataflow.Pipeline do
   alias Dataflow.PTransform
   alias Dataflow.Pipeline.{AppliedTransform, NestedState}
 
+  require Logger
+
   @opaque id :: pos_integer
 
   defstruct pid: nil
@@ -22,18 +24,16 @@ defmodule Dataflow.Pipeline do
     defstruct options: [], values: %{}, transforms: %{}, counter: nil
 
     def from_options(opts) do
-      counter_pid = Agent.start_link(fn -> 1 end)
+      {:ok, counter_pid} = Agent.start_link(fn -> 1 end)
       %__MODULE__{options: opts, counter: counter_pid}
     end
 
-    def add_value(%State{values: vs} = state, %PValue{id: id} = v) do
-      values = %{vs | id => v}
-      %{state | values: values}
+    def add_value(%State{values: values} = state, %PValue{id: id} = value) do
+      %{state | values: Map.put(values, id, value)}
     end
 
-    def add_transform(%State{transforms: ts} = state, %AppliedTransform{id: id} = t) do
-      transforms = %{ts | id => t}
-      %{state | transforms: transforms}
+    def add_transform(%State{transforms: transforms} = state, %AppliedTransform{id: id} = transform) do
+      %{state | transforms: Map.put(transforms, id, transform)}
     end
 
     def add_values(state, values) when is_list(values) do
@@ -75,18 +75,17 @@ defmodule Dataflow.Pipeline do
   end
 
 
-  def apply_transform(%__MODULE__{pid: pid}, value, transform, opts \\ []) do
-    GenServer.call(pid, {:apply_transform, value, transform, opts})
-
+  def apply_transform(%__MODULE__{pid: pid} = pipeline, value, transform, opts \\ []) do
+    GenServer.call(pid, {:apply_transform, pipeline, value, transform, opts})
   end
 
-  def apply_root_transform(%__MODULE__{pid: pid} = p, transform, opts \\ []) do
+  def apply_root_transform(%__MODULE__{pid: pid} = pipeline, transform, opts \\ []) do
     #TODO: ensure transform supports being root
     # PTransform.root_transform? transform
 
-    value = GenServer.call(pid, {:add_value, %PValue{type: :dummy}})
+    value = GenServer.call(pid, {:add_value, pipeline, %PValue{type: :dummy, producer: 0}})
 
-    apply_transform(p, value, transform, opts)
+    apply_transform(pipeline, value, transform, opts)
   end
 
   def pipeline?(%__MODULE__{pid: p}) when is_pid(p) do
@@ -124,7 +123,7 @@ defmodule Dataflow.Pipeline do
     {:reply, Map.has_key?(state.values, value), state}
   end
 
-  def handle_call({:apply_transform, value, transform, _opts}, _from, state) do
+  def handle_call({:apply_transform, pipeline, value, transform, opts}, _from, state) do
     #TODO: verify value is correct etc
 
     #TODO: for now assume value is a single PValue and not a composite
@@ -135,11 +134,11 @@ defmodule Dataflow.Pipeline do
     #TODO: factor out non-critical section code for better concurrency
 
     # Set up the nested state tracker
-    nested_state = NestedState.start_link(fn -> fresh_id(state) end)
+    {:ok, nested_state} = NestedState.start_link(pipeline, fn -> fresh_id(state) end)
     nested_input = %NestedInput{value: value, state: nested_state}
 
     NestedState.push_context(nested_state, 0) # Set the root transform as the root of the tree
-    output = do_apply_transform(nested_input, transform)  #Protocol polymorphism
+    %NestedInput{value: output} = do_apply_transform(nested_input, transform, opts)  #Protocol polymorphism
     unless NestedState.pop_context(nested_state) == 0, do: raise "Invariant error occurred: nesting context corrupted"
 
     {new_values, new_transforms} = NestedState.flush(nested_state)
@@ -152,12 +151,11 @@ defmodule Dataflow.Pipeline do
     {:reply, output, state}
   end
 
-  def handle_call({:add_value, value}, _from, state) do
+  def handle_call({:add_value, pipeline, value}, _from, state) do
     #TODO: ensure value is value
-
     id = fresh_id(state)
 
-    new_value = %{value | id: id}
+    new_value = %{value | id: id, pipeline: pipeline}
 
     {:reply, new_value, State.add_value(state, new_value)}
   end
@@ -166,7 +164,7 @@ defmodule Dataflow.Pipeline do
     do_apply_transform(nested_input, transform, opts)
   end
 
-  defp do_apply_transform(nested_input, transform, _opts \\ []) do
+  defp do_apply_transform(nested_input, transform, opts \\ []) do
     state = nested_input.state
 
     # Get an ID for our new transform
@@ -178,22 +176,26 @@ defmodule Dataflow.Pipeline do
     # Make ourselves the new context
     NestedState.push_context(state, id)
 
-    output = PTransform.apply transform, nested_input # {id, transform}
+    %NestedInput{value: output} = PTransform.apply transform, nested_input # {id, transform}
 
-    NestedState.add_value(state, output) #handled by fresh_pvalue?
+    NestedState.add_value(state, output) # should this be handled by fresh_pvalue?
     NestedState.add_transform(state,
       %AppliedTransform{
         id: id,
         parent: parent,
         transform: transform,
         input: nested_input.value, #inputs?
-        output: output #outputs?
+        output: output, #outputs?
+        pipeline: NestedState.pipeline(state),
+        label: Keyword.get(opts, :label, "")
       }
     )
 
     # Pop the context
     unless NestedState.pop_context(state) == id, do: raise "Invariant error occurred: nesting context corrupted"
 
-    output
+    %NestedInput{state: state, value: output}
   end
+
+
 end

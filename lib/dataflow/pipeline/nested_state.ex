@@ -5,15 +5,16 @@ defmodule Dataflow.Pipeline.NestedState do
       stack:          [Dataflow.Pipeline.id],
       new_values:     [PValue.t],
       new_transforms: [Dataflow.Pipeline.AppliedTransform.t],
-      fresh_id:       (() -> Dataflow.Pipeline.id)
+      fresh_id:       (() -> Dataflow.Pipeline.id),
+      pipeline:       Dataflow.Pipeline.t
     }
 
     @opaque t :: pid
 
-    defstruct stack: [], new_values: [], new_transforms: [], fresh_id: nil
+    defstruct stack: [], new_values: [], new_transforms: [], fresh_id: nil, pipeline: nil
 
-    def start_link(fresh_id) do
-      Agent.start_link(fn -> %__MODULE__{fresh_id: fresh_id} end)
+    def start_link(pipeline, fresh_id) do
+      Agent.start_link(fn -> %__MODULE__{fresh_id: fresh_id, pipeline: pipeline} end)
     end
 
     def push_context(pid, cid) do
@@ -39,10 +40,14 @@ defmodule Dataflow.Pipeline.NestedState do
     end
 
     def add_value(pid, value) do
-      Agent.update(pid, fn %__MODULE__{new_values: vs} = state -> %{state | new_values: [value | vs]} end)
+      Agent.update(pid, fn %__MODULE__{new_values: values} = state -> %{state | new_values: [value | values]} end)
     end
 
     def add_transform(pid, transform) do
-      Agent.update(pid, fn %__MODULE__{new_values: vs} = state -> %{state | new_transforms: [transform | vs]} end)
+      Agent.update(pid, fn %__MODULE__{new_transforms: transforms} = state -> %{state | new_transforms: [transform | transforms]} end)
+    end
+
+    def pipeline(pid) do
+      Agent.get(pid, fn %__MODULE__{pipeline: pipeline} -> pipeline end)
     end
   end

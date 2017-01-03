@@ -19,4 +19,10 @@ defmodule Dataflow.Transforms.Fns.DoFn do
   def from_function(fun) when is_function(fun, 5) do
     %__MODULE__{process: fun}
   end
+
+  def from_function(fun) when is_function(fun, 1) do
+    %__MODULE__{
+      process: fn el, _, _, _, _ -> fun.(el) end
+    }
+  end
 end

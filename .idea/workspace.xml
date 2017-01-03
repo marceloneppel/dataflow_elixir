@@ -2,8 +2,14 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="15262f9d-21c9-4b28-a6fb-8a7a6074e935" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/core/create.ex" />
+      <change type="NEW" beforePath="" afterPath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/examples/basic.exs" />
       <change type="MODIFICATION" beforePath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/.idea/workspace.xml" afterPath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow.ex" afterPath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow.ex" />
+      <change type="MODIFICATION" beforePath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/pipeline.ex" afterPath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/pipeline.ex" />
+      <change type="MODIFICATION" beforePath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/pipeline/nested_state.ex" afterPath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/pipeline/nested_state.ex" />
+      <change type="MODIFICATION" beforePath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/ptransform.ex" afterPath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/ptransform.ex" />
+      <change type="MODIFICATION" beforePath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/core/group_by_key.ex" afterPath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/core/group_by_key.ex" />
+      <change type="MODIFICATION" beforePath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/do_fn.ex" afterPath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/do_fn.ex" />
     </list>
     <ignored path="dataflow_elixir.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -29,21 +35,91 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="par_do.ex" pinned="false" current-in-tab="false">
-        <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/core/par_do.ex">
+      <file leaf-file-name="create.ex" pinned="false" current-in-tab="false">
+        <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/core/create.ex">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="15">
-              <caret line="1" column="0" lean-forward="false" selection-start-line="1" selection-start-column="0" selection-end-line="2" selection-end-column="0" />
+            <state relative-caret-position="105">
+              <caret line="7" column="21" lean-forward="false" selection-start-line="7" selection-start-column="21" selection-end-line="7" selection-end-column="21" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="create.ex" pinned="false" current-in-tab="true">
-        <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/core/create.ex">
+      <file leaf-file-name="basic.exs" pinned="false" current-in-tab="false">
+        <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/examples/basic.exs">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="270">
-              <caret line="18" column="0" lean-forward="true" selection-start-line="18" selection-start-column="0" selection-end-line="18" selection-end-column="0" />
+            <state relative-caret-position="150">
+              <caret line="10" column="0" lean-forward="true" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="pipeline.ex" pinned="false" current-in-tab="false">
+        <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/pipeline.ex">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="493">
+              <caret line="198" column="0" lean-forward="true" selection-start-line="198" selection-start-column="0" selection-end-line="198" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="dataflow.ex" pinned="false" current-in-tab="false">
+        <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow.ex">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="180">
+              <caret line="12" column="34" lean-forward="false" selection-start-line="12" selection-start-column="34" selection-end-line="12" selection-end-column="34" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="combine_values.ex" pinned="false" current-in-tab="false">
+        <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/core/combine_values.ex">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="435">
+              <caret line="29" column="27" lean-forward="true" selection-start-line="29" selection-start-column="27" selection-end-line="29" selection-end-column="27" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="combine_fn.ex" pinned="false" current-in-tab="false">
+        <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/combine_fn.ex">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="497">
+              <caret line="48" column="86" lean-forward="true" selection-start-line="48" selection-start-column="86" selection-end-line="48" selection-end-column="86" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="combine_globally.ex" pinned="false" current-in-tab="false">
+        <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/core/combine_globally.ex">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="120">
+              <caret line="8" column="0" lean-forward="false" selection-start-line="8" selection-start-column="0" selection-end-line="8" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="group_by_key.ex" pinned="false" current-in-tab="false">
+        <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/core/group_by_key.ex">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="540">
+              <caret line="39" column="44" lean-forward="true" selection-start-line="39" selection-start-column="44" selection-end-line="39" selection-end-column="44" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="ptransform.ex" pinned="false" current-in-tab="true">
+        <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/ptransform.ex">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="480">
+              <caret line="32" column="9" lean-forward="true" selection-start-line="32" selection-start-column="9" selection-end-line="32" selection-end-column="9" />
               <folding />
             </state>
           </provider>
@@ -62,6 +138,10 @@
     <findStrings>
       <find>use Dataflow.PTransform</find>
       <find>Dataflow.Transforms.Util</find>
+      <find>add_value</find>
+      <find>producer</find>
+      <find>dummy</find>
+      <find>NestedState.add_value</find>
     </findStrings>
     <replaceStrings>
       <replace>Dataflow.Transforms.Fns</replace>
@@ -79,21 +159,15 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/test/dataflow_elixir_test.exs" />
-        <option value="$PROJECT_DIR$/lib/dataflow/pipeline.ex" />
-        <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/test/dataflow_elixir_test.exs" />
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/pvalue.ex" />
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/util/do_fn.ex" />
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/pipeline/state.ex" />
-        <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/pipeline/nested_state.ex" />
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/pipeline/applied_transform.ex" />
-        <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow.ex" />
         <option value="$PROJECT_DIR$/lib/dataflow/transforms/core/combine_values.ex" />
         <option value="$PROJECT_DIR$/lib/dataflow/transforms/core/group_by_key.ex" />
         <option value="$PROJECT_DIR$/lib/dataflow.ex" />
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/applicable.ex" />
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/ptransform/protocol.ex" />
-        <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/pipeline.ex" />
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/util/combine_fn.ex" />
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/util/window_fn.ex" />
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/util/output_time_fn.ex" />
@@ -112,7 +186,6 @@
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/output_time_fn/output_at_end_of_window.ex" />
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/windowing/window.ex" />
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/window.ex" />
-        <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/do_fn.ex" />
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/utils/windowed_value.ex" />
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/utils/time.ex" />
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/window_fn/fixed.ex" />
@@ -123,13 +196,20 @@
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/core/combine_values.ex" />
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/core/group_by_key_only.ex" />
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/core/par_do.ex" />
-        <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/core/group_by_key.ex" />
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/window_fn/sliding.ex" />
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/output_time_fn.ex" />
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/mix.exs" />
-        <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/ptransform.ex" />
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/window_fn.ex" />
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/core/create.ex" />
+        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch.ex" />
+        <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/do_fn.ex" />
+        <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/pipeline/nested_state.ex" />
+        <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/core/group_by_key.ex" />
+        <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/examples/basic.exs" />
+        <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow.ex" />
+        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_1.ex" />
+        <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/pipeline.ex" />
+        <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/ptransform.ex" />
       </list>
     </option>
   </component>
@@ -232,6 +312,20 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
+              <option name="myItemId" value="test" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="dataflow_elixir" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="dataflow_elixir" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
               <option name="myItemId" value="lib" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
@@ -251,28 +345,6 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="dataflow" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="dataflow_elixir" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="dataflow_elixir" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="lib" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="dataflow" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="utils" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -321,66 +393,6 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="fns" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="dataflow_elixir" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="dataflow_elixir" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="lib" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="dataflow" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="transforms" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="fns" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="window_fn" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="dataflow_elixir" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="dataflow_elixir" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="lib" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="dataflow" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="transforms" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="fns" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="output_time_fn" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -432,6 +444,20 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="dataflow_elixir" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="dataflow_elixir" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="examples" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
         </subPane>
       </pane>
       <pane id="PackagesPane" />
@@ -455,6 +481,7 @@
     <property name="nodejs_interpreter_path" value="/usr/local/bin/node" />
     <property name="js.eslint.eslintPackage" value="" />
     <property name="GO_FMT" value="false" />
+    <property name="com.intellij.ide.scratch.LRUPopupBuilder$2/Languages" value="Elixir" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
@@ -1129,7 +1156,7 @@
       <workItem from="1482001901009" duration="5615000" />
       <workItem from="1482640198269" duration="13999000" />
       <workItem from="1483316604929" duration="452000" />
-      <workItem from="1483393327987" duration="21366000" />
+      <workItem from="1483393327987" duration="26367000" />
     </task>
     <task id="LOCAL-00001" summary="Remove accidental code">
       <created>1481864465256</created>
@@ -1145,11 +1172,18 @@
       <option name="project" value="LOCAL" />
       <updated>1483419182515</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Add Create root transform">
+      <created>1483420651135</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1483420651135</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="85860000" />
+    <option name="totallyTimeSpent" value="90861000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="1920" height="1053" extended-state="6" />
@@ -1234,49 +1268,14 @@
     <MESSAGE value="Add Session windows" />
     <MESSAGE value="Fix errors and make project compile" />
     <MESSAGE value="Fix up docs" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fix up docs" />
+    <MESSAGE value="Add Create root transform" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add Create root transform" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/test/dataflow_elixir_test.exs">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="226">
-          <caret line="21" column="34" lean-forward="true" selection-start-line="21" selection-start-column="34" selection-end-line="21" selection-end-column="34" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/test/dataflow_elixir_test.exs">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="210">
-          <caret line="14" column="26" lean-forward="false" selection-start-line="14" selection-start-column="26" selection-end-line="14" selection-end-column="26" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/pipeline/state.ex" />
-    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/pipeline/applied_transform.ex">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
-          <caret line="6" column="0" lean-forward="true" selection-start-line="6" selection-start-column="0" selection-end-line="6" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow.ex">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="345">
-          <caret line="23" column="0" lean-forward="true" selection-start-line="23" selection-start-column="0" selection-end-line="23" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/lib/dataflow/transforms/core/combine_values.ex">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="480">
-          <caret line="32" column="5" lean-forward="false" selection-start-line="32" selection-start-column="5" selection-end-line="32" selection-end-column="5" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/lib/dataflow/transforms/core/combine_globally.ex">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="210">
@@ -1313,24 +1312,10 @@
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/applicable.ex" />
-    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/pipeline.ex">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="225">
-          <caret line="19" column="0" lean-forward="true" selection-start-line="19" selection-start-column="0" selection-end-line="19" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/ptransform/protocol.ex">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="120">
           <caret line="8" column="68" lean-forward="true" selection-start-line="8" selection-start-column="68" selection-end-line="8" selection-end-column="68" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/combine_fn.ex">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="33" lean-forward="false" selection-start-line="0" selection-start-column="33" selection-end-line="0" selection-end-column="33" />
         </state>
       </provider>
     </entry>
@@ -1412,14 +1397,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/pipeline/nested_state.ex">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="10" lean-forward="false" selection-start-line="0" selection-start-column="10" selection-end-line="0" selection-end-column="10" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/output_time_fn/depends_only_on_window.ex">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="270">
@@ -1457,16 +1434,6 @@
         <state relative-caret-position="0">
           <caret line="0" column="10" lean-forward="false" selection-start-line="0" selection-start-column="10" selection-end-line="0" selection-end-column="38" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/do_fn.ex">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="345">
-          <caret line="22" column="0" lean-forward="false" selection-start-line="22" selection-start-column="0" selection-end-line="22" selection-end-column="0" />
-          <folding>
-            <marker date="1483411687000" expanded="true" signature="39:618" ph="do: ..." />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1510,30 +1477,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/core/combine_globally.ex">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="120">
-          <caret line="8" column="0" lean-forward="false" selection-start-line="8" selection-start-column="0" selection-end-line="8" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/core/combine_per_key.ex">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="330">
-          <caret line="22" column="0" lean-forward="true" selection-start-line="22" selection-start-column="0" selection-end-line="22" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/core/combine_values.ex">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="570">
-          <caret line="38" column="2" lean-forward="true" selection-start-line="38" selection-start-column="2" selection-end-line="38" selection-end-column="2" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/core/group_by_key_only.ex">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="165">
@@ -1554,14 +1497,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="45">
           <caret line="3" column="0" lean-forward="true" selection-start-line="3" selection-start-column="0" selection-end-line="3" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/ptransform.ex">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="272">
-          <caret line="39" column="0" lean-forward="true" selection-start-line="39" selection-start-column="0" selection-end-line="39" selection-end-column="0" />
           <folding />
         </state>
       </provider>
@@ -1590,10 +1525,42 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/core/group_by_key.ex">
+    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/test/test_helper.exs">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="225">
-          <caret line="15" column="85" lean-forward="true" selection-start-line="15" selection-start-column="85" selection-end-line="15" selection-end-column="85" />
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/test/dataflow_elixir_test.exs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="45">
+          <caret line="3" column="32" lean-forward="true" selection-start-line="3" selection-start-column="32" selection-end-line="3" selection-end-column="32" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.ex">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="240">
+          <caret line="16" column="0" lean-forward="true" selection-start-line="16" selection-start-column="0" selection-end-line="16" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/do_fn.ex">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="435">
+          <caret line="28" column="0" lean-forward="true" selection-start-line="28" selection-start-column="0" selection-end-line="28" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/pipeline/nested_state.ex">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="557">
+          <caret line="51" column="7" lean-forward="true" selection-start-line="51" selection-start-column="7" selection-end-line="51" selection-end-column="7" />
           <folding />
         </state>
       </provider>
@@ -1608,8 +1575,88 @@
     </entry>
     <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/core/create.ex">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="270">
-          <caret line="18" column="0" lean-forward="true" selection-start-line="18" selection-start-column="0" selection-end-line="18" selection-end-column="0" />
+        <state relative-caret-position="105">
+          <caret line="7" column="21" lean-forward="false" selection-start-line="7" selection-start-column="21" selection-end-line="7" selection-end-column="21" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/core/combine_values.ex">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="435">
+          <caret line="29" column="27" lean-forward="true" selection-start-line="29" selection-start-column="27" selection-end-line="29" selection-end-column="27" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/combine_fn.ex">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="497">
+          <caret line="48" column="86" lean-forward="true" selection-start-line="48" selection-start-column="86" selection-end-line="48" selection-end-column="86" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/core/combine_per_key.ex">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="330">
+          <caret line="22" column="0" lean-forward="true" selection-start-line="22" selection-start-column="0" selection-end-line="22" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/core/combine_globally.ex">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="8" column="0" lean-forward="false" selection-start-line="8" selection-start-column="0" selection-end-line="8" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/core/group_by_key.ex">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="540">
+          <caret line="39" column="44" lean-forward="true" selection-start-line="39" selection-start-column="44" selection-end-line="39" selection-end-column="44" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow.ex">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="180">
+          <caret line="12" column="34" lean-forward="false" selection-start-line="12" selection-start-column="34" selection-end-line="12" selection-end-column="34" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_1.ex">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="90">
+          <caret line="2" column="4" lean-forward="false" selection-start-line="2" selection-start-column="4" selection-end-line="2" selection-end-column="4" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/pipeline.ex">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="493">
+          <caret line="198" column="0" lean-forward="true" selection-start-line="198" selection-start-column="0" selection-end-line="198" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/examples/basic.exs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="150">
+          <caret line="10" column="0" lean-forward="true" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/ptransform.ex">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="480">
+          <caret line="32" column="9" lean-forward="true" selection-start-line="32" selection-start-column="9" selection-end-line="32" selection-end-column="9" />
           <folding />
         </state>
       </provider>

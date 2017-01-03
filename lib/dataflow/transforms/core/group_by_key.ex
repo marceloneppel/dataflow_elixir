@@ -38,7 +38,7 @@ defmodule Dataflow.Transforms.Core.GroupByKey do
       input
       ~> "reify_windows" -- par_do(reify_windows_do_fn)
       ~> "group_by_key" -- group_by_key_only
-      ~> "group_by_window" -- par_do(group_also_by_window_do_fn(nil)) # windowing? get this from input?
+      ~> "group_by_window" -- par_do(group_also_by_window_do_fn(:windowing_here)) # windowing? get this from input?
     end
 
   end

@@ -12,7 +12,7 @@ defmodule Dataflow.PTransform do
         quote do
           alias unquote(__MODULE__)
           import unquote(__MODULE__), only: [fresh_pvalue: 1]
-          import Dataflow, only: [~>: 2]
+          use Dataflow
         end
       ]
 
@@ -38,11 +38,15 @@ defmodule Dataflow.PTransform do
   def fresh_pvalue(%NestedInput{state: state}) do
     #todo LABEL????
 
-    %PValue{
-      id: NestedState.fresh_id(state),
-      #label: ???,
-      producer: NestedState.peek_context(state)
-    }
+    value =
+      %PValue{
+        id: NestedState.fresh_id(state),
+        #label: ???,
+        producer: NestedState.peek_context(state),
+        pipeline: NestedState.pipeline(state)
+      }
+
+    %NestedInput{state: state, value: value}
   end
 
   def apply(transform, nested_input) do
