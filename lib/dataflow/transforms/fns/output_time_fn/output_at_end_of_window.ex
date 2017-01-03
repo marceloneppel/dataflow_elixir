@@ -17,13 +17,13 @@ defmodule Dataflow.Transforms.Fns.OutputTimeFn.OutputAtEndOfWindow do
 
   use Dataflow.Transforms.Fns.OutputTimeFn
 
-  alias Dataflow.{Utils.Time, Window}
+  alias Dataflow.Window
 
   def assign_output_time(window, _input_timestamp) do
     Window.max_timestamp window
   end
 
-  def combine(output_timestamp, other_output_timestamp) do
+  def combine(output_timestamp, _other_output_timestamp) do
     output_timestamp
   end
 

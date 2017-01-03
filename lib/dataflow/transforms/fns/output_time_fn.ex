@@ -109,7 +109,7 @@ defmodule Dataflow.Transforms.Fns.OutputTimeFn do
 
   defmacro __using__(_opts) do
     quote do
-      @behaviour __MODULE__
+      @behaviour unquote(__MODULE__)
 
       def combine(output_timestamp, other_output_timestamp) do
         Utils.Time.min(output_timestamp, other_output_timestamp)
