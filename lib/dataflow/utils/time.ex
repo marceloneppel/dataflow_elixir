@@ -109,7 +109,7 @@ defmodule Dataflow.Utils.Time do
   def before_eq?(t1, t2), do: less_than_eq?(t1, t2)
 
   @spec greater_than_eq?(t, t) :: boolean
-  def greater_than_eq?(t1, t2), do: not less_than(t1, t2)
+  def greater_than_eq?(t1, t2), do: not less_than?(t1, t2)
 
   @spec after_eq?(timestamp, timestamp) :: boolean
   def after_eq?(t1, t2), do: greater_than_eq?(t1, t2)

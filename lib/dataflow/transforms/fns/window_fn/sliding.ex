@@ -14,46 +14,16 @@ defmodule Dataflow.Transforms.Fns.WindowFn.Sliding do
       in range [0, period).
   """
 
-  use Dataflow.Transforms.Fns.WindowFn, fields: [size: nil, offset: nil, period: nil]
+  alias Dataflow.Transforms.Fns.WindowFn
+  alias Dataflow.Utils.Time
+
+  defstruct size: nil, offset: nil, period: nil
 
   @type t :: %__MODULE__{
     size: Time.duration,
     offset: Time.duration,
     period: Time.duration
   }
-
-  def non_merging?(_), do: true
-
-  def assign(%__MODULE__{size: size, offset: offset, period: period}, timestamp, _element, _windows) do
-    # Get the last starting time of a window that contains this timestamp.
-    overlap =
-      timestamp
-      |> Time.add(period)
-      |> Time.subtract(offset)
-      |> Time.raw
-      |> mod(Time.raw(period))
-      |> Time.duration(:microseconds)
-
-    last_starting_time = Time.subtract(timestamp, overlap)
-
-    number_of_windows =
-      (Time.raw(size) / Time.raw(period))
-      |> Float.floor
-
-    min_first_starting_time = Time.subtract(last_starting_time, size)
-
-    Stream.iterate(last_starting_time, &Time.subtract(&1, period))
-    |> Stream.take_while(&Time.after_eq?(&1, min_first_starting_time))
-    |> Enum.map(fn start -> Dataflow.Window.interval(start, size) end)
-  end
-
-  def side_input_window(fun, window) do
-    if Dataflow.Window.global? window do
-      raise ArgumentError, message: "Attempted to get side input window for GlobalWindow from non-global WindowFn"
-    end
-
-    assign(fun, Dataflow.Window.max_timestamp(window), nil, nil)
-  end
 
   @spec new(size :: Time.duration, period :: Time.duration, offset :: Time.duration) :: t
   def new(size, period, offset \\ Time.duration(0)) do
@@ -63,4 +33,42 @@ defmodule Dataflow.Transforms.Fns.WindowFn.Sliding do
 
     %__MODULE__{size: size, period: period, offset: offset}
   end
+
+  defimpl WindowFn.Callable do
+    use WindowFn
+    alias Dataflow.Transforms.Fns.WindowFn.Sliding
+
+    def non_merging?(_), do: true
+
+    def assign(%Sliding{size: size, offset: offset, period: period}, timestamp, _element, _windows) do
+      import Dataflow.Utils, only: [mod: 2]
+
+      # Get the last starting time of a window that contains this timestamp.
+      overlap =
+        timestamp
+        |> Time.add(period)
+        |> Time.subtract(offset)
+        |> Time.raw
+        |> mod(Time.raw(period))
+        |> Time.duration(:microseconds)
+
+      last_starting_time = Time.subtract(timestamp, overlap)
+
+      min_first_starting_time = Time.subtract(last_starting_time, size)
+
+      Stream.iterate(last_starting_time, &Time.subtract(&1, period))
+      |> Stream.take_while(&Time.after_eq?(&1, min_first_starting_time))
+      |> Enum.map(fn start -> Dataflow.Window.interval(start, size) end)
+    end
+
+    def side_input_window(fun, window) do
+      if Dataflow.Window.global? window do
+        raise ArgumentError, message: "Attempted to get side input window for GlobalWindow from non-global WindowFn"
+      end
+
+      assign(fun, Dataflow.Window.max_timestamp(window), nil, nil)
+    end
+  end
+
+
 end
