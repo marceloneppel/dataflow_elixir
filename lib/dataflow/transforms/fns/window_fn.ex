@@ -1,7 +1,8 @@
 defmodule Dataflow.Transforms.Fns.WindowFn do
   @moduledoc """
-  The argument to the `Dataflow.Transforms.Windowing.Window` transform used to assign elements into windows and to determine
-  how windows are merged. See that module for more information on how these are used.
+  The argument to the `Dataflow.Transforms.Windowing.Window` transform used to assign elements into windows and to determine how windows are merged.
+
+  See that module for more information on how these are used.
 
   Users will generally want to use the predefined `WindowFn`s, but it is also possible to create new ones.
 
@@ -37,7 +38,7 @@ defmodule Dataflow.Transforms.Fns.WindowFn do
     `existing_windows` is a list of windows currently assigned to the element prior to this `WindowFn` being called.
     """
     @spec assign(
-            window_fn :: struct,
+            window_fn :: t,
             timestamp :: Utils.Time.timestamp,
             element :: any,
             existing_windows :: [Window.t]
@@ -45,7 +46,9 @@ defmodule Dataflow.Transforms.Fns.WindowFn do
     def assign(window_fn, timestamp, element, existing_windows)
 
     @doc """
-    Allows the merging of some windows. To indicate that several windows should be merged into a new one, include a
+    Allows the merging of some windows.
+
+    To indicate that several windows should be merged into a new one, include a
     `{to_be_merged, merge_result}` tuple in the output list. To indicate no merging, just return the empty list. Any lists
     of windows returned must be mutually disjoint.
 
@@ -53,13 +56,13 @@ defmodule Dataflow.Transforms.Fns.WindowFn do
 
     The default implementation returns the empty list.
     """
-    @spec merge(window_fn :: struct, windows :: [Window.t]) :: [{[Window.t], Window.t}]
+    @spec merge(window_fn :: t, windows :: [Window.t]) :: [{[Window.t], Window.t}]
     def merge(window_fn, windows)
 
     @doc """
     Returns the window of the side input corresponding to the given window of the main input.
     """
-    @spec side_input_window(window_fn :: struct, window :: Window.t) :: Window.t
+    @spec side_input_window(window_fn :: t, window :: Window.t) :: Window.t
     def side_input_window(window_fn, window)
 
     @doc """
@@ -76,7 +79,7 @@ defmodule Dataflow.Transforms.Fns.WindowFn do
     past the end of the earlier window.
     """
     # TODO: is transformed_output_time deprecated? It's only found in the Python SDK
-    @spec transformed_output_time(window_fn :: struct, window :: Window.t, input_timestamp :: Utils.Time.t)
+    @spec transformed_output_time(window_fn :: t, window :: Window.t, input_timestamp :: Utils.Time.t)
                 :: Utils.Time.t
     def transformed_output_time(window_fn, window, input_timestamp)
 
@@ -85,7 +88,7 @@ defmodule Dataflow.Transforms.Fns.WindowFn do
 
     Default implementation returns false.
     """
-    @spec non_merging?(window_fn :: struct) :: boolean
+    @spec non_merging?(window_fn :: t) :: boolean
     def non_merging?(window_fn)
   end
 end

@@ -50,7 +50,7 @@ defmodule Dataflow.PTransform do
   end
 
   defprotocol Callable do
-    @spec apply(transform :: struct, input :: Dataflow.Pipeline.NestedState.t) :: Dataflow.PValue.value
+    @spec apply(transform :: t, input :: Dataflow.Pipeline.NestedState.t) :: Dataflow.PValue.value
     def apply(transform, input)
   end
 end
