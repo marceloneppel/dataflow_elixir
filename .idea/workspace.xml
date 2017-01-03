@@ -2,20 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="15262f9d-21c9-4b28-a6fb-8a7a6074e935" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/window_fn/fixed.ex" />
-      <change type="NEW" beforePath="" afterPath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/window_fn/global.ex" />
-      <change type="NEW" beforePath="" afterPath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/window_fn/sliding.ex" />
-      <change type="NEW" beforePath="" afterPath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/windowing/window.ex" />
-      <change type="NEW" beforePath="" afterPath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/utils.ex" />
-      <change type="NEW" beforePath="" afterPath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/window.ex" />
-      <change type="DELETED" beforePath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/output_time_fn/output_at_earliest_transformed_input_timestamp.ex" afterPath="" />
-      <change type="MOVED" beforePath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/utils/time.ex" afterPath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/utils/time.ex" />
+      <change type="NEW" beforePath="" afterPath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/window_fn/sessions.ex" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/.idea/workspace.xml" afterPath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/output_time_fn.ex" afterPath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/output_time_fn.ex" />
-      <change type="MODIFICATION" beforePath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/output_time_fn/depends_only_on_window.ex" afterPath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/output_time_fn/depends_only_on_window.ex" />
-      <change type="MODIFICATION" beforePath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/output_time_fn/output_at_end_of_window.ex" afterPath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/output_time_fn/output_at_end_of_window.ex" />
       <change type="MODIFICATION" beforePath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/window_fn.ex" afterPath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/window_fn.ex" />
+      <change type="MODIFICATION" beforePath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/window_fn/sliding.ex" afterPath="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/window_fn/sliding.ex" />
     </list>
     <ignored path="dataflow_elixir.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -44,8 +35,18 @@
       <file leaf-file-name="window_fn.ex" pinned="false" current-in-tab="false">
         <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/window_fn.ex">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1005">
-              <caret line="67" column="42" lean-forward="true" selection-start-line="67" selection-start-column="42" selection-end-line="67" selection-end-column="42" />
+            <state relative-caret-position="210">
+              <caret line="54" column="37" lean-forward="true" selection-start-line="54" selection-start-column="37" selection-end-line="54" selection-end-column="37" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="window.ex" pinned="false" current-in-tab="false">
+        <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/window.ex">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="392">
+              <caret line="56" column="10" lean-forward="true" selection-start-line="56" selection-start-column="10" selection-end-line="56" selection-end-column="10" />
               <folding />
             </state>
           </provider>
@@ -61,11 +62,21 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="sliding.ex" pinned="false" current-in-tab="true">
+      <file leaf-file-name="sliding.ex" pinned="false" current-in-tab="false">
         <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/window_fn/sliding.ex">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="285">
-              <caret line="19" column="24" lean-forward="true" selection-start-line="19" selection-start-column="24" selection-end-line="19" selection-end-column="24" />
+            <state relative-caret-position="332">
+              <caret line="48" column="0" lean-forward="true" selection-start-line="48" selection-start-column="0" selection-end-line="48" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="sessions.ex" pinned="false" current-in-tab="true">
+        <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/window_fn/sessions.ex">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="437">
+              <caret line="72" column="35" lean-forward="false" selection-start-line="72" selection-start-column="35" selection-end-line="72" selection-end-column="35" />
               <folding />
             </state>
           </provider>
@@ -140,7 +151,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/lib/dataflow_elixir/pvalue.ex" />
         <option value="$PROJECT_DIR$/lib/dataflow_elixir/pipeline.ex" />
         <option value="$PROJECT_DIR$/lib/dataflow_elixir.ex" />
         <option value="$PROJECT_DIR$/lib/dataflow/transforms/core.ex" />
@@ -182,7 +192,6 @@
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/output_time_fn/output_at_earliest_transformed_input_timestamp.ex" />
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/window_fn/global.ex" />
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/output_time_fn/depends_only_on_window.ex" />
-        <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/window_fn.ex" />
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/output_time_fn.ex" />
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/utils.ex" />
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/output_time_fn/output_at_end_of_window.ex" />
@@ -191,6 +200,8 @@
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/window_fn/fixed.ex" />
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/utils/time.ex" />
         <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/window_fn/sliding.ex" />
+        <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/window_fn.ex" />
+        <option value="$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/window_fn/sessions.ex" />
       </list>
     </option>
   </component>
@@ -1163,7 +1174,7 @@
       <workItem from="1482001901009" duration="5615000" />
       <workItem from="1482640198269" duration="13999000" />
       <workItem from="1483316604929" duration="452000" />
-      <workItem from="1483393327987" duration="9268000" />
+      <workItem from="1483393327987" duration="13586000" />
     </task>
     <task id="LOCAL-00001" summary="Remove accidental code">
       <created>1481864465256</created>
@@ -1176,7 +1187,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="73762000" />
+    <option name="totallyTimeSpent" value="78080000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="1920" height="1053" extended-state="6" />
@@ -1249,26 +1260,22 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
+    <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
+    <option name="CHECK_NEW_TODO" value="false" />
     <MESSAGE value="Fleshed out code, started implementation of pipeline and transform functions" />
     <MESSAGE value="Generalise the transform pattern more, get code to compile." />
     <MESSAGE value="Change the `make_fun` option of `PTransform.__using__` to take an `import`-style list" />
     <MESSAGE value="Remove accidental code" />
     <MESSAGE value="Do some refactoring and tweaking" />
     <MESSAGE value="Extension work around windowing. OutputTimeFns implemented." />
-    <option name="LAST_COMMIT_MESSAGE" value="Extension work around windowing. OutputTimeFns implemented." />
+    <MESSAGE value="Add more windowing functions and documentation" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add more windowing functions and documentation" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/lib/dataflow.ex">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="210">
-          <caret line="14" column="80" lean-forward="false" selection-start-line="14" selection-start-column="80" selection-end-line="14" selection-end-column="80" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/lib/dataflow/transforms/core.ex">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="45">
@@ -1563,22 +1570,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/window.ex">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-148">
-          <caret line="47" column="33" lean-forward="true" selection-start-line="47" selection-start-column="33" selection-end-line="47" selection-end-column="33" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/window_fn.ex">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1005">
-          <caret line="67" column="42" lean-forward="true" selection-start-line="67" selection-start-column="42" selection-end-line="67" selection-end-column="42" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/window_fn/global.ex">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="75">
@@ -1603,10 +1594,34 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/window.ex">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="392">
+          <caret line="56" column="10" lean-forward="true" selection-start-line="56" selection-start-column="10" selection-end-line="56" selection-end-column="10" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/window_fn.ex">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="210">
+          <caret line="54" column="37" lean-forward="true" selection-start-line="54" selection-start-column="37" selection-end-line="54" selection-end-column="37" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/window_fn/sliding.ex">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="285">
-          <caret line="19" column="24" lean-forward="true" selection-start-line="19" selection-start-column="24" selection-end-line="19" selection-end-column="24" />
+        <state relative-caret-position="332">
+          <caret line="48" column="0" lean-forward="true" selection-start-line="48" selection-start-column="0" selection-end-line="48" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/uni/II/II_IndProj/dev/dataflow_elixir/lib/dataflow/transforms/fns/window_fn/sessions.ex">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="437">
+          <caret line="72" column="35" lean-forward="false" selection-start-line="72" selection-start-column="35" selection-end-line="72" selection-end-column="35" />
           <folding />
         </state>
       </provider>

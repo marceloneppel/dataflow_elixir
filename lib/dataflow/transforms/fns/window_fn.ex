@@ -30,6 +30,8 @@ defmodule Dataflow.Transforms.Fns.WindowFn do
   `{to_be_merged, merge_result}` tuple in the output list. To indicate no merging, just return the empty list. Any lists
   of windows returned must be mutually disjoint.
 
+  For performance reasons it is safe to return no-op merges such as `{[w], w}`, these will be ignored.
+
   The default implementation returns the empty list.
   """
   @callback merge(window_fn :: struct, windows :: [Window.t]) :: [{[Window.t], Window.t}]
@@ -54,6 +56,8 @@ defmodule Dataflow.Transforms.Fns.WindowFn do
   """
   @callback transformed_output_time(window_fn :: struct, window :: Window.t, input_timestamp :: Utils.Time.t)
               :: Utils.Time.t
+
+  # TODO: is transformed_output_time deprecated? It's only found in the Python SDK
 
   @doc """
   Is true if this `WindowFn` never needs to merge any windows.

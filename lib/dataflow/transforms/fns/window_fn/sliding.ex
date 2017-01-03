@@ -55,10 +55,10 @@ defmodule Dataflow.Transforms.Fns.WindowFn.Sliding do
     assign(fun, Dataflow.Window.max_timestamp(window), nil, nil)
   end
 
-
+  @spec new(size :: Time.duration, period :: Time.duration, offset :: Time.duration) :: t
   def new(size, period, offset \\ Time.duration(0)) do
     unless Time.greater_than_eq?(offset, Time.duration(0)) && Time.less_than?(offset, size) do
-      raise ArgumentError, "Fixed windows must have 0 <= offset < size"
+      raise ArgumentError, "Sliding windows must have 0 <= offset < size"
     end
 
     %__MODULE__{size: size, period: period, offset: offset}
