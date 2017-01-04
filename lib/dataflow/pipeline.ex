@@ -74,6 +74,9 @@ defmodule Dataflow.Pipeline do
     end
   end
 
+  def _get_state(%__MODULE__{pid: pid}) do
+    GenServer.call(pid, {:_get_state})
+  end
 
   def apply_transform(%__MODULE__{pid: pid} = pipeline, value, transform, opts \\ []) do
     GenServer.call(pid, {:apply_transform, pipeline, value, transform, opts})
@@ -160,6 +163,10 @@ defmodule Dataflow.Pipeline do
     new_value = %{value | id: id, pipeline: pipeline}
 
     {:reply, new_value, State.add_value(state, new_value)}
+  end
+
+  def handle_call({:_get_state}, _from, state) do
+    {:reply, state, state}
   end
 
   def apply_nested_transform(nested_input, transform, opts \\ []) do
