@@ -56,7 +56,8 @@ defmodule Dataflow.Transforms.Fns.WindowFn.Sliding do
 
       min_first_starting_time = Time.subtract(last_starting_time, size)
 
-      Stream.iterate(last_starting_time, &Time.subtract(&1, period))
+      last_starting_time
+      |> Stream.iterate(&Time.subtract(&1, period))
       |> Stream.take_while(&Time.after_eq?(&1, min_first_starting_time))
       |> Enum.map(fn start -> Dataflow.Window.interval(start, size) end)
     end

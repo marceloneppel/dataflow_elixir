@@ -27,9 +27,11 @@ defmodule Dataflow.Transforms.Core.CombineValues do
           # `{key, enum}`, with `iter` an enumerable of all the values associated with `key`
           # in the input PCollection.
 
-          combined = CombineFn.create_accumulator(fun)
-          |> CombineFn.add_inputs(enum)
-          |> CombineFn.extract_output
+          combined =
+            fun
+            |> CombineFn.create_accumulator
+            |> CombineFn.add_inputs(enum)
+            |> CombineFn.extract_output
 
           {key, combined}
         end

@@ -139,7 +139,9 @@ defmodule Dataflow.Pipeline do
 
     NestedState.push_context(nested_state, 0) # Set the root transform as the root of the tree
     %NestedInput{value: output} = do_apply_transform(nested_input, transform, opts)  #Protocol polymorphism
-    unless NestedState.pop_context(nested_state) == 0, do: raise "Invariant error occurred: nesting context corrupted"
+    {0, _parts} = NestedState.pop_context(nested_state)
+    # Invariant check
+    # TODO: add _parts to the root transform list here??
 
     {new_values, new_transforms} = NestedState.flush(nested_state)
 
@@ -178,11 +180,16 @@ defmodule Dataflow.Pipeline do
 
     %NestedInput{value: output} = PTransform.apply transform, nested_input # {id, transform}
 
+    # Pop the context
+    {^id, parts} = NestedState.pop_context(state)
+    # On invariant error the id pinned match will fail
+
     NestedState.add_value(state, output) # should this be handled by fresh_pvalue?
     NestedState.add_transform(state,
       %AppliedTransform{
         id: id,
         parent: parent,
+        parts: parts,
         transform: transform,
         input: nested_input.value, #inputs?
         output: output, #outputs?
@@ -191,8 +198,7 @@ defmodule Dataflow.Pipeline do
       }
     )
 
-    # Pop the context
-    unless NestedState.pop_context(state) == id, do: raise "Invariant error occurred: nesting context corrupted"
+
 
     %NestedInput{state: state, value: output}
   end

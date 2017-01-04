@@ -175,12 +175,14 @@ defmodule Dataflow.Utils.Time do
   def raw({:duration, t}, :microseconds), do: t
 
   def raw(t, :milliseconds) do
-    raw(t, :microseconds)
+    t
+    |> raw(:microseconds)
     |> div(1_000)
   end
 
   def raw(t, :seconds) do
-    raw(t, :microseconds)
+    t
+    |> raw(:microseconds)
     |> div(1_000_000)
   end
 
