@@ -27,7 +27,7 @@ defmodule Dataflow.Transforms.Core.GroupByKey do
       }
     end
 
-    def apply(_, input) do
+    def expand(_, input) do
       # This code path used in the local runner, cloud runners can take this as an atomic operation and do some magic.
       # Maybe we'll be able to do that at some point too?
 

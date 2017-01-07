@@ -10,7 +10,7 @@ defmodule Dataflow.Transforms.Core.Create do
   def create(value), do: %__MODULE__{value: value}
 
   defimpl PTransform.Callable do
-    def apply(_, input) do
+    def expand(_, input) do
       #TODO: assert that input is PBegin?
       fresh_pvalue input
     end

@@ -185,7 +185,7 @@ defmodule Dataflow.Pipeline do
     # Make ourselves the new context
     NestedState.push_context(state, id)
 
-    %NestedInput{value: output} = PTransform.apply transform, nested_input # {id, transform}
+    %NestedInput{value: output} = PTransform.expand transform, nested_input # {id, transform}
 
     # Pop the context
     {^id, parts} = NestedState.pop_context(state)

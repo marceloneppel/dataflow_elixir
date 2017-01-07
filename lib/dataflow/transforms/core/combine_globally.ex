@@ -10,7 +10,7 @@ defmodule Dataflow.Transforms.Core.CombineGlobally do
   defimpl PTransform.Callable do
     alias Dataflow.Transforms.Core.CombineGlobally
 
-    def apply(%CombineGlobally{combine_fn: fun}, input) do
+    def expand(%CombineGlobally{combine_fn: fun}, input) do
         #todo defaults, as_view
         use Dataflow.Transforms.Core.CombinePerKey
         import Dataflow.Transforms.Core, only: [map: 1]

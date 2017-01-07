@@ -6,7 +6,7 @@ defmodule Dataflow.Transforms.Core.GroupByKeyOnly do
   def group_by_key_only, do: %__MODULE__{}
 
   defimpl PTransform.Callable do
-    def apply(_, input) do
+    def expand(_, input) do
       fresh_pvalue input
     end
   end
