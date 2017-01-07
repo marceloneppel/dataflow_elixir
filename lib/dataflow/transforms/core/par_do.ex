@@ -7,7 +7,7 @@ defmodule Dataflow.Transforms.Core.ParDo do
 
   defimpl PTransform.Callable do
     #TODO with_outputs
-    def apply(_, input) do
+    def expand(_, input) do
       #TODO init side output tags
       fresh_pvalue input
     end

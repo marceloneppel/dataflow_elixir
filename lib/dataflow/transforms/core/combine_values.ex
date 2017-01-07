@@ -9,7 +9,7 @@ defmodule Dataflow.Transforms.Core.CombineValues do
   defimpl PTransform.Callable do
     alias Dataflow.Transforms.Core.CombineValues
 
-    def apply(%CombineValues{combine_fn: %CombineFn{} = fun}, input) do
+    def expand(%CombineValues{combine_fn: %CombineFn{} = fun}, input) do
       use Dataflow.Transforms.Core.ParDo
 
       #todo typings

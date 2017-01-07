@@ -49,12 +49,12 @@ defmodule Dataflow.PTransform do
     %NestedInput{state: state, value: value}
   end
 
-  def apply(transform, nested_input) do
-      Dataflow.PTransform.Callable.apply transform, nested_input
+  def expand(transform, nested_input) do
+      Dataflow.PTransform.Callable.expand transform, nested_input
   end
 
   defprotocol Callable do
-    @spec apply(transform :: t, input :: Dataflow.Pipeline.NestedState.t) :: Dataflow.PValue.value
-    def apply(transform, input)
+    @spec expand(transform :: t, input :: Dataflow.Pipeline.NestedState.t) :: Dataflow.PValue.value
+    def expand(transform, input)
   end
 end
