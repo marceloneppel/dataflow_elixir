@@ -12,7 +12,7 @@ defmodule Dataflow.Transforms.Core.CombinePerKey do
       use Dataflow.Transforms.Core.{GroupByKey, CombineValues}
       #todo labels
       input
-      ~> group_by_key
+      ~> group_by_key()
       ~> "Combine" -- combine_values(fun)
     end
   end

@@ -9,7 +9,6 @@ defmodule Dataflow.Transforms.Core.GroupByKey do
   def group_by_key, do: %__MODULE__{}
 
   defimpl PTransform.Callable do
-    alias Dataflow.Transforms.Core.GroupByKey
 
     defp reify_windows_do_fn do
       fn ({key, value}, timestamp, windows, _label, _state) ->
@@ -36,8 +35,8 @@ defmodule Dataflow.Transforms.Core.GroupByKey do
       use Dataflow.Transforms.Core.GroupByKeyOnly
 
       input
-      ~> "reify_windows" -- par_do(reify_windows_do_fn)
-      ~> "group_by_key" -- group_by_key_only
+      ~> "reify_windows" -- par_do(reify_windows_do_fn())
+      ~> "group_by_key" -- group_by_key_only()
       ~> "group_by_window" -- par_do(group_also_by_window_do_fn(:windowing_here)) # windowing? get this from input?
     end
 
