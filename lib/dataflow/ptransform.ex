@@ -11,7 +11,7 @@ defmodule Dataflow.PTransform do
       [
         quote do
           alias unquote(__MODULE__)
-          import unquote(__MODULE__), only: [fresh_pvalue: 1]
+          import unquote(__MODULE__), only: [fresh_pvalue: 1, fresh_pvalue: 2]
           use Dataflow
         end
       ]
@@ -35,15 +35,18 @@ defmodule Dataflow.PTransform do
     quote do unquote_splicing(code ++ using) end
   end
 
-  def fresh_pvalue(%NestedInput{state: state}) do
+  def fresh_pvalue(%NestedInput{state: state}, opts \\ []) do
     #todo LABEL????
+
+    type = Keyword.get opts, :type, :normal
 
     value =
       %PValue{
         id: NestedState.fresh_id(state),
         #label: ???,
         producer: NestedState.peek_context(state),
-        pipeline: NestedState.pipeline(state)
+        pipeline: NestedState.pipeline(state),
+        type: type
       }
 
     %NestedInput{state: state, value: value}

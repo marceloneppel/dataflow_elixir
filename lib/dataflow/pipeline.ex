@@ -198,8 +198,8 @@ defmodule Dataflow.Pipeline do
         parent: parent,
         parts: parts,
         transform: transform,
-        input: nested_input.value, #inputs?
-        output: output, #outputs?
+        input: nested_input.value.id, #inputs?
+        output: output.id, #outputs?
         pipeline: NestedState.pipeline(state),
         label: Keyword.get(opts, :label, "")
       }

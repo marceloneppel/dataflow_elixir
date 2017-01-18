@@ -28,6 +28,8 @@ defmodule Dataflow.Runner do
     end
 
     defmacro __before_compile__(_env) do
-      def expand_transform(_), do: :pass
+      quote do
+        def expand_transform(_), do: :pass
+      end
     end
 end

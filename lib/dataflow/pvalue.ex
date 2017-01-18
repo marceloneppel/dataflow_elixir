@@ -16,4 +16,6 @@ defmodule Dataflow.PValue do
   defstruct pipeline: :floating, id: nil, label: "", producer: nil, type: :normal
   #TODO enforce keys
 
+  def dummy?(%__MODULE__{type: type}), do: type == :dummy
+
 end
