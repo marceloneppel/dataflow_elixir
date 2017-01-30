@@ -6,7 +6,7 @@ defmodule Dataflow.Runner do
     @doc """
     Executes the given pipeline.
     """
-    @callback run(Dataflow.Pipeline.t) :: {:ok, pid} | {:error, any}
+    @callback run(Dataflow.Pipeline.t, [any]) :: {:ok, pid} | {:error, any}
 
     @doc """
     A hook for custom implementations of the `expand` function for some transforms.

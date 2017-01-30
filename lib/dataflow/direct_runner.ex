@@ -10,8 +10,9 @@ defmodule Dataflow.DirectRunner do
   use Dataflow.Runner
 
   alias Dataflow.{Pipeline, Pipeline.State, Pipeline.AppliedTransform}
+  alias Dataflow.DirectRunner.PipelineSupervisor
 
-  def run(pipeline) do
+  def run(pipeline, _opts \\ []) do
     state = Pipeline._get_state(pipeline)
 
     # TODO: Do some coalescing of tasks?
@@ -21,8 +22,13 @@ defmodule Dataflow.DirectRunner do
     {leaf_transforms, consumers} = calculate_transforms_consumers(state)
     %{transforms: transforms, values: values} = state
 
+#    Logger.debug "VALUES:\n\n#{Apex.Format.format values}"
+#    Logger.debug "TRANSFORMS:\n\n#{Apex.Format.format transforms}"
+#    Logger.debug "LEAF TRANSFORMS:\n\n#{Apex.Format.format leaf_transforms |> Map.keys}"
+
     # TODO Verify that all values are actually being consumed? (but what about sinks)
 
+    PipelineSupervisor.start_link(leaf_transforms, values)
 
   end
 
@@ -38,6 +44,8 @@ defmodule Dataflow.DirectRunner do
       {leaf_xforms, consumers} ->
       # No parts, hence a leaf transform.
       {Map.put(leaf_xforms, transform_id, at), add_consumer_to_list(consumers, input_id, transform_id)}
+
+      _, acc -> acc # composite transform, so ignore
     end
   end
 

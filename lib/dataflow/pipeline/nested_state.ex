@@ -2,39 +2,38 @@ defmodule Dataflow.Pipeline.NestedState do
     alias Dataflow.PValue
 
     @typep state :: %__MODULE__{
-      stack:          [Dataflow.Pipeline.id],
+      stack:          [{Dataflow.Pipeline.id, [Dataflow.Pipeline.id]}],
       new_values:     [PValue.t],
       new_transforms: [Dataflow.Pipeline.AppliedTransform.t],
       fresh_id:       (() -> Dataflow.Pipeline.id),
       pipeline:       Dataflow.Pipeline.t,
-      current_parts:  [Dataflow.Pipeline.id]
     }
 
     @opaque t :: pid
 
-    defstruct stack: [], new_values: [], new_transforms: [], fresh_id: nil, pipeline: nil, current_parts: []
+    defstruct stack: [], new_values: [], new_transforms: [], fresh_id: nil, pipeline: nil
 
     def start_link(pipeline, fresh_id) do
       Agent.start_link(fn -> %__MODULE__{fresh_id: fresh_id, pipeline: pipeline} end)
     end
 
     def push_context(pid, cid) do
-      Agent.update(pid, fn %__MODULE__{stack: stack} = state -> %{state | stack: [cid | stack]} end)
+      Agent.update(pid, fn %__MODULE__{stack: stack} = state -> %{state | stack: [{cid, []} | stack]} end)
     end
 
     def pop_context(pid) do
       Agent.get_and_update(pid,
-        fn %__MODULE__{stack: [cid | ss], current_parts: parts} = state ->
+        fn %__MODULE__{stack: [top | stack]} = state ->
           {
-            {cid, parts},
-            %{state | stack: ss, current_parts: []}
+            top,
+            %{state | stack: stack}
           }
         end
       )
     end
 
     def peek_context(pid) do
-      Agent.get(pid, fn %__MODULE__{stack: [cid | _]} -> cid end)
+      Agent.get(pid, fn %__MODULE__{stack: [{cid, _} | _]} -> cid end)
     end
 
     def flush(pid) do
@@ -53,8 +52,8 @@ defmodule Dataflow.Pipeline.NestedState do
 
     def add_transform(pid, transform) do
       Agent.update(pid,
-        fn %__MODULE__{new_transforms: transforms, current_parts: current_parts} = state ->
-          %{state | new_transforms: [transform | transforms], current_parts: [transform.id | current_parts]}
+        fn %__MODULE__{new_transforms: transforms, stack: [{cid, parts} | stack]} = state ->
+          %{state | new_transforms: [transform | transforms], stack: [ {cid, [transform.id | parts]} | stack]}
         end
       )
     end

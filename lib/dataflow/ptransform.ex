@@ -37,16 +37,14 @@ defmodule Dataflow.PTransform do
 
   def fresh_pvalue(%NestedInput{state: state}, opts \\ []) do
     #todo LABEL????
-
-    type = Keyword.get opts, :type, :normal
-
+    id = NestedState.fresh_id(state)
     value =
       %PValue{
-        id: NestedState.fresh_id(state),
-        #label: ???,
+        id: id,
+        label: opts[:label] || "##{id}",
         producer: NestedState.peek_context(state),
         pipeline: NestedState.pipeline(state),
-        type: type
+        type: opts[:type] || :normal
       }
 
     %NestedInput{state: state, value: value}

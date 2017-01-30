@@ -31,6 +31,7 @@ defmodule Dataflow.Mixfile do
       {:ex_doc, "~> 0.14", only: :dev},
       {:credo, "~> 0.5", only: [:dev, :test]},
       {:gen_stage, "~> 0.11"},
+      {:apex, "~>0.7.0"},
     ]
   end
 end

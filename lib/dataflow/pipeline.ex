@@ -43,6 +43,10 @@ defmodule Dataflow.Pipeline do
     def add_transforms(state, transforms) when is_list(transforms) do
       Enum.reduce transforms, state, &(add_transform &2, &1)
     end
+
+    def get_runner(%State{options: opts}) do
+      opts[:runner]
+    end
   end
 
   defmodule NestedInput do
@@ -74,12 +78,17 @@ defmodule Dataflow.Pipeline do
     end
   end
 
+  def run(%__MODULE__{pid: pid} = pipeline, opts \\ []) do
+    runner = GenServer.call(pid, {:get_runner})
+    runner.run pipeline, opts
+  end
+
   def _get_state(%__MODULE__{pid: pid}) do
     GenServer.call(pid, {:_get_state})
   end
 
   def apply_transform(%__MODULE__{pid: pid} = pipeline, value, transform, opts \\ []) do
-    GenServer.call(pid, {:apply_transform, pipeline, value, transform, opts})
+    GenServer.call(pid, {:apply_transform, pipeline, value, transform, opts}, :infinity) #TODO remove timout
   end
 
   def apply_root_transform(%__MODULE__{pid: pid} = pipeline, transform, opts \\ []) do
@@ -143,7 +152,7 @@ defmodule Dataflow.Pipeline do
     NestedState.push_context(nested_state, 0) # Set the root transform as the root of the tree
     %NestedInput{value: output} = do_apply_transform(nested_input, transform, opts)  #Protocol polymorphism
     {0, _parts} = NestedState.pop_context(nested_state)
-    # Invariant check
+    # Invariant check, _parts is top-level transforms so no need to keep track
     # TODO: add _parts to the root transform list here??
 
     {new_values, new_transforms} = NestedState.flush(nested_state)
@@ -167,6 +176,10 @@ defmodule Dataflow.Pipeline do
 
   def handle_call({:_get_state}, _from, state) do
     {:reply, state, state}
+  end
+
+  def handle_call({:get_runner}, _from, state) do
+    {:reply, State.get_runner(state), state}
   end
 
   def apply_nested_transform(nested_input, transform, opts \\ []) do

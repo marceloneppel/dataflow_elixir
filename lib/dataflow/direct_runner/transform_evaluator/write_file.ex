@@ -7,13 +7,13 @@ defmodule Dataflow.DirectRunner.TransformEvaluator.WriteFile do
     File.open(filename, [:utf8, :write])
   end
 
-  def consume_element(element, file) do
+  def consume_element({element, _timestamp, _windows}, file) do
     IO.write(file, [element, "\n"])
     file
   end
 
   def consume_elements(elements, file) do
-    for el <- elements, do: IO.write(file, [el, "\n"])
+    for {el, _, _} <- elements, do: IO.write(file, [el, "\n"])
     file
   end
 

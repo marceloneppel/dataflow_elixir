@@ -12,17 +12,16 @@ defmodule Dataflow.Transforms.Fns.DoFn do
 
   def _default_bundle_process(x), do: x
 
-  # process :: element, _timestamp, _windows, _label, _state
+  # process :: element, _timestamp, _windows, _label, _state todo!
 
   #todo behaviour
 
-  def from_function(fun) when is_function(fun, 5) do
-    %__MODULE__{process: fun}
-  end
-
   def from_function(fun) when is_function(fun, 1) do
     %__MODULE__{
-      process: fn el, _, _, _, _ -> fun.(el) end
+      process: fn {el, timestamp, windows} ->
+        fun.(el)
+        |> Enum.map(&{&1, timestamp, windows})
+      end
     }
   end
 end

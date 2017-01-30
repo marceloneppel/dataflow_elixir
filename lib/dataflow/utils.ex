@@ -18,9 +18,9 @@ defmodule Dataflow.Utils do
     get_label_from_transform(transform)
   end
 
-  def make_transform_label(%AppliedTransform{label: label, transform: transform}, opts) do
+  def make_transform_label(%AppliedTransform{id: id, label: label, transform: transform}, opts) do
     separator = if (Keyword.get opts, :newline, true), do: "\n", else: " "
-    "#{label}#{separator}{#{get_label_from_transform(transform)}}"
+    "##{id} #{label}#{separator}{#{get_label_from_transform(transform)}}"
   end
 
   defp get_label_from_transform(%{__struct__: module}) do

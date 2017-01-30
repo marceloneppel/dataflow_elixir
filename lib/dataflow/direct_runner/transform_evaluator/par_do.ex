@@ -9,14 +9,13 @@ defmodule Dataflow.DirectRunner.TransformEvaluator.ParDo do
     {:ok, do_fn}
   end
 
-  def process_element(element, %DoFn{process: process}) do
+  def transform_element(element, %DoFn{process: process} = state) do
     # The process function should already be returning a list of elements, so no flattening needed
-    process.(element)
+    {process.(element), state}
   end
 
-  def process_elements(elements, %DoFn{process: process}) do
-    elements
-    |> Enum.flat_map(process)
+  def transform_elements(elements, %DoFn{process: process} = state) do
+    {Enum.flat_map(elements, process), state}
   end
 
   def finish(_state) do

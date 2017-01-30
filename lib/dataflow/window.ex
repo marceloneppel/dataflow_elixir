@@ -18,7 +18,7 @@ defmodule Dataflow.Window do
   def max_timestamp(:global) do
     # Note, in the Java implementation they effectively do `max - 1 days` to get around some triggering logic.
     # Here, we need to make sure to appropriately modify that logic in the triggering code.
-    :max
+    Time.max_timestamp
   end
 
   def max_timestamp(interval) do

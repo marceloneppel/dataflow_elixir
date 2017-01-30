@@ -46,8 +46,8 @@ defmodule Dataflow.Utils.PipelineVisualiser do
     []
   end
 
-  defp get_data_edges(consumer_id, %PValue{producer: producer_id}) do
-    [{:data, producer_id, consumer_id}]
+  defp get_data_edges(consumer_id, %PValue{producer: producer_id, label: label}) do
+    [{:data, producer_id, consumer_id, label}]
   end
 
   defp get_parent_edges(_child_id, 0) do
@@ -73,8 +73,8 @@ defmodule Dataflow.Utils.PipelineVisualiser do
     "#{id}[label=\"#{label}\"];\n"
   end
 
-  defp output_edge({:data, from, to}) do
-    "#{from} -> #{to};\n"
+  defp output_edge({:data, from, to, label}) do
+    "#{from} -> #{to}[label=\"#{label}\"];\n"
   end
 
   defp output_edge({:parent, from, to}) do

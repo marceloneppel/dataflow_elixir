@@ -38,9 +38,9 @@ output
 ~> "write" -- write_file("examples/data/kinglear_words.txt")
 
 # Actually run the pipeline, and await its result
-# Pipeline.run p, sync: true
+Pipeline.run p, sync: true
 
-visualise p
+#visualise p
 
 # Command to run visualisation (fish shell)
 # mix compile; and mix run examples/word_count.exs | dot -Tpng | display
