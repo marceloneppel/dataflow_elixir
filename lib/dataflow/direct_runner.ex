@@ -12,7 +12,7 @@ defmodule Dataflow.DirectRunner do
   alias Dataflow.{Pipeline, Pipeline.State, Pipeline.AppliedTransform}
   alias Dataflow.DirectRunner.PipelineSupervisor
 
-  def run(pipeline, _opts \\ []) do
+  def run(pipeline, opts \\ []) do
     state = Pipeline._get_state(pipeline)
 
     # TODO: Do some coalescing of tasks?
@@ -28,7 +28,14 @@ defmodule Dataflow.DirectRunner do
 
     # TODO Verify that all values are actually being consumed? (but what about sinks)
 
-    PipelineSupervisor.start_link(leaf_transforms, values)
+    {:ok, pid} = PipelineSupervisor.start_link(leaf_transforms, values)
+
+    if opts[:sync] do
+      ref = Process.monitor pid
+      receive do
+        {:DOWN, ^ref, _, _, _} -> Logger.info "Pipeline exited"
+      end
+    end
 
   end
 

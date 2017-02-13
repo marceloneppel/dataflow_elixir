@@ -100,8 +100,13 @@ defmodule Dataflow.DirectRunner.TransformExecutor do
       :active -> {:noreply, results, new_int_state}
       :finished ->
         new_int_state = advance_output_watermark(Time.max_timestamp, new_int_state)
+        enqueue_finish_shutdown()
         {:noreply, results, new_int_state} #TODO! Stop?? Finish?
     end
+  end
+
+  defp advance_output_watermark(_, %InternalState{mode: :consumer, applied_transform: at} = state) do
+    Logger.debug fn -> "#{transform_label(at)}: not advancing output watermark because is consumer" end
   end
 
   defp advance_output_watermark(watermark, %InternalState{applied_transform: at, local_output_wm: lowm} = state) do
@@ -135,10 +140,25 @@ defmodule Dataflow.DirectRunner.TransformExecutor do
 
     new_state = advance_output_watermark(output_watermark, %{ex_state | evaluator_state: new_ev_state})
 
+    if new_watermark == Time.max_timestamp do
+      enqueue_finish_shutdown()
+    end
+
     {:noreply, events, new_state}
+  end
+
+  def handle_info(:"$pipeline_finished", state) do
+    Logger.info "#{transform_label(state.applied_transform)}: shutting down executor due to pipeline finished."
+    {:stop, :normal, state}
   end
 
   defp transform_label(at) do
     "<#{Utils.make_transform_label at, newline: false}>"
+  end
+
+  defp enqueue_finish_shutdown() do
+    Logger.debug "#{inspect self} enqueuing a shutdown message"
+    #TODO preserve chain of shutdowns
+    #Process.send self, :"$pipeline_finished", []
   end
 end

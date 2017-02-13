@@ -16,7 +16,7 @@ defmodule Dataflow.DirectRunner.PipelineSupervisor do
     workers =
       leaf_transforms
       |> Enum.sort
-      |> Enum.map(fn {tid, transform} -> worker(TransformExecutor, [transform], id: tid) end)
+      |> Enum.map(fn {tid, transform} -> worker(TransformExecutor, [transform], id: tid, restart: :transient) end)
 
     supervise([store, transform_registry | workers], strategy: :one_for_one) #TODO: consider the correct strategy here
   end
