@@ -3,7 +3,7 @@ defmodule Dataflow.DirectRunner.TransformEvaluator.WriteFile do
 
   alias Dataflow.Transforms.IO.WriteFile
 
-  def init(%WriteFile{filename: filename}) do
+  def init(%WriteFile{filename: filename}, _input) do
     File.open(filename, [:utf8, :write])
   end
 

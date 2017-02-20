@@ -1,4 +1,4 @@
-defmodule Dataflow.Transforms.Fns.WindowFn.Sliding do
+defmodule Dataflow.Window.WindowFn.Sliding do
   @moduledoc """
   A windowing function that windows values into possibly overlapping fixed-size timestamp-based windows.
 
@@ -14,7 +14,7 @@ defmodule Dataflow.Transforms.Fns.WindowFn.Sliding do
       in range [0, period).
   """
 
-  alias Dataflow.Transforms.Fns.WindowFn
+  alias Dataflow.Window.WindowFn
   alias Dataflow.Utils.Time
 
   defstruct size: nil, offset: nil, period: nil
@@ -36,7 +36,7 @@ defmodule Dataflow.Transforms.Fns.WindowFn.Sliding do
 
   defimpl WindowFn.Callable do
     use WindowFn
-    alias Dataflow.Transforms.Fns.WindowFn.Sliding
+    alias Dataflow.Window.WindowFn.Sliding
 
     def non_merging?(_), do: true
 

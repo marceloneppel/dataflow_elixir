@@ -8,6 +8,7 @@ defmodule Dataflow.Window do
   """
 
   alias Dataflow.Utils.Time
+  require Time
 
   @type global :: :global
   @type interval :: Time.interval

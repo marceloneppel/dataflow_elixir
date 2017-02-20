@@ -1,9 +1,9 @@
-#defmodule Dataflow.Transforms.Fns.OutputTimeFn.DependsOnlyOnWindow do
+#defmodule Dataflow.Window.OutputTimeFn.DependsOnlyOnWindow do
 #  @moduledoc "OutputTimeFn that only depends on the window."
 #
 #  #TODO this should actually be an extensible thing in itself
 #
-#  use Dataflow.Transforms.Fns.OutputTimeFn
+#  use Dataflow.Window.OutputTimeFn
 #
 #  def combine(output_timestamp, other_output_timestamp) do
 #    raise "module not implemented correctly yet."

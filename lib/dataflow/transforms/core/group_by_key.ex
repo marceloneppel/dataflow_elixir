@@ -11,7 +11,7 @@ defmodule Dataflow.Transforms.Core.GroupByKey do
   defimpl PTransform.Callable do
 
     def expand(_, input) do
-      fresh_pvalue input
+      fresh_pvalue input, from: input
     end
 
   end

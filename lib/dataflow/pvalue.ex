@@ -11,9 +11,18 @@ defmodule Dataflow.PValue do
     (3) Has a value which is meaningful if the transform was executed.
   """
 
+  require Dataflow.Window.WindowingStrategy
+
   @type value :: any
 
-  defstruct pipeline: :floating, id: nil, label: "", producer: nil, type: :normal
+  defstruct \
+    pipeline: :floating,
+    id: nil,
+    label: "",
+    producer: nil,
+    type: :collection,
+    bounded: true,
+    windowing_strategy: Dataflow.Window.WindowingStrategy.default_strategy
   #TODO enforce keys
 
   def dummy?(%__MODULE__{type: type}), do: type == :dummy

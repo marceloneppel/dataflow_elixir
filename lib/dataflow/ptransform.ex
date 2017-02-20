@@ -5,6 +5,8 @@ defmodule Dataflow.PTransform do
 
   alias Dataflow.Pipeline.{NestedInput, NestedState}
   alias Dataflow.PValue
+  require Dataflow.Pipeline
+  require NestedInput
 
   defmacro __using__(opts) do
     code =
@@ -37,18 +39,23 @@ defmodule Dataflow.PTransform do
 
   def fresh_pvalue(%NestedInput{state: state}, opts \\ []) do
     #todo LABEL????
+    value = get_from_value(opts[:from])
     id = NestedState.fresh_id(state)
     value =
-      %PValue{
+      %{value |
         id: id,
         label: opts[:label] || "##{id}",
         producer: NestedState.peek_context(state),
         pipeline: NestedState.pipeline(state),
-        type: opts[:type] || :normal
+        type: opts[:type] || :collection
       }
 
     %NestedInput{state: state, value: value}
   end
+
+  defp get_from_value(%PValue{} = value), do: value
+  defp get_from_value(%NestedInput{value: value}), do: value
+  defp get_from_value(nil), do: %PValue{}
 
   def expand(transform, nested_input) do
       Dataflow.PTransform.Callable.expand transform, nested_input

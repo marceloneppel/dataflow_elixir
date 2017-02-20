@@ -1,7 +1,8 @@
 defmodule Dataflow.DirectRunner.TransformEvaluator.GroupByKey do
   use Dataflow.DirectRunner.TransformEvaluator, type: :reducing
 
-  alias Dataflow.{Window, Utils.Time}
+  alias Dataflow.{Window, Utils.Time, PValue}
+  require Time
 
   defmodule State do
     alias Dataflow.DirectRunner.TransformEvaluator
@@ -13,14 +14,16 @@ defmodule Dataflow.DirectRunner.TransformEvaluator.GroupByKey do
 
     @type t :: %__MODULE__{
       elements: %{Window.t => %{key => [value]}},
-      triggers: [trigger_fun] # a trigger function takes the current output timestamp
+      triggers: [trigger_fun], # a trigger function takes the current output timestamp
+      input: PValue.t # the input to this function, used to read off the triggering/windowing semantics
     }
 
-    defstruct elements: %{}, triggers: []
+    defstruct elements: %{}, triggers: [], input: nil
   end
 
-  def init(_) do
-    {:ok, %State{}}
+  def init(_, input) do
+    #Todo read stuff from the input PValue to set up the correct windowing and triggers, etc.
+    {:ok, %State{input: input}}
   end
 
   def transform_element(element, state) do
@@ -53,8 +56,8 @@ defmodule Dataflow.DirectRunner.TransformEvaluator.GroupByKey do
         %{state | elements: new_elements, triggers: new_triggers}
 
       windows ->
-        # There is more than one window, so reduce them with the current function
-        Enum.reduce windows, state, fn window, st -> buffer_element state, {{key, value}, timestamp, [window]} end
+        # There is more than one window, so unpack and reduce the elements with the current function
+        Enum.reduce windows, state, fn window, st -> buffer_element st, {{key, value}, timestamp, [window]} end
     end
   end
 

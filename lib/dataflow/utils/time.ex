@@ -68,10 +68,13 @@ defmodule Dataflow.Utils.Time do
   def interval?(_), do: false
 
   @spec max_timestamp :: timestamp
-  def max_timestamp, do: {:timestamp, :max}
+  defmacro max_timestamp, do: quote do: {:timestamp, :max}
 
   @spec min_timestamp :: timestamp
-  def min_timestamp, do: {:timestamp, :min}
+  defmacro min_timestamp, do: quote do: {:timestamp, :min}
+
+  @spec zero_duration :: duration
+  defmacro zero_duration, do: quote do: {:duration, 0}
 
   @spec compare(t, t) :: boolean
   def compare({:timestamp, t1}, {:timestamp, t2}) do

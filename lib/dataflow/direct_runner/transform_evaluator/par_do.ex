@@ -4,7 +4,7 @@ defmodule Dataflow.DirectRunner.TransformEvaluator.ParDo do
 
   use Dataflow.DirectRunner.TransformEvaluator
 
-  def init(%ParDo{do_fn: do_fn}) do
+  def init(%ParDo{do_fn: do_fn}, _input) do
     # do something here to do with starting a bundle maybe. Not right now.
     {:ok, do_fn}
   end

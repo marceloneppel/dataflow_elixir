@@ -1,4 +1,4 @@
-defmodule Dataflow.Transforms.Fns.OutputTimeFn do
+defmodule Dataflow.Window.OutputTimeFn do
   @moduledoc """
   A function from timestamps of input values to the timestamp for a computed value.
 
@@ -16,7 +16,7 @@ defmodule Dataflow.Transforms.Fns.OutputTimeFn do
   module:
 
   ```
-  use Dataflow.Transforms.Fns.OutputTimeFn
+  use Dataflow.Window.OutputTimeFn
   ```
   """
 

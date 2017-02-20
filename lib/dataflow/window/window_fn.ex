@@ -1,4 +1,4 @@
-defmodule Dataflow.Transforms.Fns.WindowFn do
+defmodule Dataflow.Window.WindowFn do
   @moduledoc """
   The argument to the `Dataflow.Transforms.Windowing.Window` transform used to assign elements into windows and to determine how windows are merged.
 

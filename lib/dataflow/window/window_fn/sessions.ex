@@ -1,4 +1,4 @@
-defmodule Dataflow.Transforms.Fns.WindowFn.Sessions do
+defmodule Dataflow.Window.WindowFn.Sessions do
   @moduledoc """
   A windowing function that groups elements into sessions.
 
@@ -9,7 +9,7 @@ defmodule Dataflow.Transforms.Fns.WindowFn.Sessions do
     `gap_size`: Size of the gap between windows.
   """
 
-  alias Dataflow.Transforms.Fns.WindowFn
+  alias Dataflow.Window.WindowFn
 
   defstruct gap_size: nil
 
@@ -31,7 +31,7 @@ defmodule Dataflow.Transforms.Fns.WindowFn.Sessions do
 
   defimpl WindowFn.Callable do
     use WindowFn
-    alias Dataflow.Transforms.Fns.WindowFn.Sessions
+    alias Dataflow.Window.WindowFn.Sessions
 
     def assign(%Sessions{gap_size: gap_size}, timestamp, _element, _windows) do
       [Dataflow.Window.interval(timestamp, gap_size)]

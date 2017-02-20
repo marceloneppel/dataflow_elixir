@@ -19,8 +19,8 @@ defmodule Dataflow.DirectRunner do
 
     # Get leaf transforms & consumer map and extract some variables
 
-    {leaf_transforms, consumers} = calculate_transforms_consumers(state)
-    %{transforms: transforms, values: values} = state
+    {leaf_transforms, _consumers} = calculate_transforms_consumers(state)
+    %{transforms: _transforms, values: values} = state
 
 #    Logger.debug "VALUES:\n\n#{Apex.Format.format values}"
 #    Logger.debug "TRANSFORMS:\n\n#{Apex.Format.format transforms}"
@@ -45,7 +45,7 @@ defmodule Dataflow.DirectRunner do
     |> Enum.reduce({%{}, %{}}, calculate_transforms_consumers_reducer(values))
   end
 
-  defp calculate_transforms_consumers_reducer(values) do
+  defp calculate_transforms_consumers_reducer(_values) do
     fn
       %AppliedTransform{id: transform_id, input: input_id, parts: []} = at,
       {leaf_xforms, consumers} ->

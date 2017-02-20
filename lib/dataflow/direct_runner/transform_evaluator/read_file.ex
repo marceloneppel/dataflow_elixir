@@ -4,8 +4,10 @@ defmodule Dataflow.DirectRunner.TransformEvaluator.ReadFile do
   alias Dataflow.Transforms.IO.ReadFile
 
   alias Dataflow.Utils.Time
+  require Time
 
-  def init(%ReadFile{filename: filename}) do
+  def init(%ReadFile{filename: filename}, input) do
+    unless (Dataflow.PValue.dummy? input), do: raise "Input to ReadFile must be a dummy."
     File.open(filename, [:utf8, :read])
   end
 

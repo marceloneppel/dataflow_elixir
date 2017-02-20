@@ -1,9 +1,9 @@
-defmodule Dataflow.Transforms.Fns.WindowFn.Global do
+defmodule Dataflow.Window.WindowFn.Global do
   @moduledoc """
   A windowing function that assigns everything to one global window.
   """
 
-  alias Dataflow.Transforms.Fns.WindowFn
+  alias Dataflow.Window.WindowFn
 
   defstruct []
 

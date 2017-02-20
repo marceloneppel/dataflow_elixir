@@ -1,4 +1,4 @@
-defmodule Dataflow.Transforms.Windowing.Window do
+defmodule Dataflow.Transforms.Windowing.WindowInto do
   @moduledoc """
   A `Window` logically divides up or groups the elements of a `PCollection` into finite windows according to a
   `WindowFn`. The output of the `Window` transform contains the same elements as its input, but they have been logically

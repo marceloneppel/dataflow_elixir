@@ -2,13 +2,13 @@ defmodule Dataflow.DirectRunner.TransformExecutor do
   alias Dataflow.Pipeline.AppliedTransform
   alias Dataflow.Utils
   alias Dataflow.PValue
-  alias Dataflow.DirectRunner.ExecutableTransform
 
   require Logger
 
   use GenStage
 
   alias Dataflow.Utils.Time
+  require Time
 
 
 
@@ -49,7 +49,7 @@ defmodule Dataflow.DirectRunner.TransformExecutor do
     GenStage.start_link(__MODULE__, transform, name: via_transform_registry(id))
   end
 
-  def init(%AppliedTransform{id: id, transform: transform, input: input_id, output: output_id} = at) do
+  def init(%AppliedTransform{id: _id, transform: transform, input: input_id, output: output_id} = at) do
     Logger.info fn -> "Starting stage #{inspect self()} for transform #{transform_label(at)}..." end
 
     input = get_value(input_id)
@@ -77,7 +77,7 @@ defmodule Dataflow.DirectRunner.TransformExecutor do
     Logger.debug "Options: #{inspect opts}"
 
     evaluator_module = Dataflow.DirectRunner.TransformEvaluator.module_for transform
-    {:ok, evaluator_state} = evaluator_module.init(transform)
+    {:ok, evaluator_state} = evaluator_module.init(transform, input)
 
     Logger.debug "Started with mode #{mode}."
 
@@ -105,7 +105,7 @@ defmodule Dataflow.DirectRunner.TransformExecutor do
     end
   end
 
-  defp advance_output_watermark(_, %InternalState{mode: :consumer, applied_transform: at} = state) do
+  defp advance_output_watermark(_, %InternalState{mode: :consumer, applied_transform: at}) do
     Logger.debug fn -> "#{transform_label(at)}: not advancing output watermark because is consumer" end
   end
 
@@ -116,23 +116,23 @@ defmodule Dataflow.DirectRunner.TransformExecutor do
         state
       new_watermark ->
         Logger.debug fn -> "#{transform_label(at)}: advancing output watermark to #{inspect watermark}" end
-        GenStage.async_notify(self, {:watermark, new_watermark})
+        GenStage.async_notify(self(), {:watermark, new_watermark})
         %{state | local_output_wm: watermark}
     end
 
   end
 
-  def handle_events(elements, _from, %InternalState{mode: :producer_consumer, applied_transform: at, callback_module: module, evaluator_state: state} = ex_state) do
+  def handle_events(elements, _from, %InternalState{mode: :producer_consumer, callback_module: module, evaluator_state: state} = ex_state) do
     {results, new_state} = module.transform_elements(elements, state)
     {:noreply, results, %{ex_state | evaluator_state: new_state}}
   end
 
-  def handle_events(elements, _from, %InternalState{mode: :consumer, applied_transform: at, callback_module: module, evaluator_state: state} = ex_state) do
+  def handle_events(elements, _from, %InternalState{mode: :consumer, callback_module: module, evaluator_state: state} = ex_state) do
     new_state = module.consume_elements(elements, state)
     {:noreply, [], %{ex_state | evaluator_state: new_state}}
   end
 
-  def handle_info({_from, {:watermark, new_watermark}}, %InternalState{callback_module: module, evaluator_state: state, local_input_wm: liwm} = ex_state) do
+  def handle_info({_from, {:watermark, new_watermark}}, %InternalState{callback_module: module, evaluator_state: state, local_input_wm: _liwm} = ex_state) do
     # notify internal execution module that watermark has changed
     {output_watermark, events, new_ev_state} = module.update_input_watermark new_watermark, state # triggers etc are in here
 
@@ -157,7 +157,7 @@ defmodule Dataflow.DirectRunner.TransformExecutor do
   end
 
   defp enqueue_finish_shutdown() do
-    Logger.debug "#{inspect self} enqueuing a shutdown message"
+    Logger.debug "#{inspect self()} enqueuing a shutdown message"
     #TODO preserve chain of shutdowns
     #Process.send self, :"$pipeline_finished", []
   end

@@ -1,4 +1,4 @@
-defmodule Dataflow.Transforms.Fns.OutputTimeFn.OutputAtEarliestInputTimestamp do
+defmodule Dataflow.Window.OutputTimeFn.OutputAtEarliestInputTimestamp do
   @moduledoc """
   OutputTimeFn outputting at earliest input timestamp.
 
@@ -11,7 +11,7 @@ defmodule Dataflow.Transforms.Fns.OutputTimeFn.OutputAtEarliestInputTimestamp do
   If the data arrives late, it has no effect on the output timestamps.
   """
 
-  use Dataflow.Transforms.Fns.OutputTimeFn
+  use Dataflow.Window.OutputTimeFn
 
   def assign_output_time(_window, input_timestamp) do
     input_timestamp

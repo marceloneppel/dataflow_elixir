@@ -9,7 +9,7 @@ defmodule Dataflow.Transforms.Core.ParDo do
     #TODO with_outputs
     def expand(_, input) do
       #TODO init side output tags
-      fresh_pvalue input
+      fresh_pvalue input, from: input
     end
   end
 

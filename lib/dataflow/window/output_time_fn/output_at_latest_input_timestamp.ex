@@ -1,4 +1,4 @@
-defmodule Dataflow.Transforms.Fns.OutputTimeFn.OutputAtLatestInputTimestamp do
+defmodule Dataflow.Window.OutputTimeFn.OutputAtLatestInputTimestamp do
   @moduledoc """
   OutputTimeFn outputting at latest input timestamp.
 
@@ -12,7 +12,7 @@ defmodule Dataflow.Transforms.Fns.OutputTimeFn.OutputAtLatestInputTimestamp do
   If data arrives late, it has no effect on the output timestamp.
   """
 
-  use Dataflow.Transforms.Fns.OutputTimeFn
+  use Dataflow.Window.OutputTimeFn
 
   alias Dataflow.Utils.Time
 

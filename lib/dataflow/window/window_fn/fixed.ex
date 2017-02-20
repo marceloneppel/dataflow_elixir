@@ -1,4 +1,4 @@
-defmodule Dataflow.Transforms.Fns.WindowFn.Fixed do
+defmodule Dataflow.Window.WindowFn.Fixed do
   @moduledoc """
   A windowing function that assigns each element to one time interval.
 
@@ -13,7 +13,7 @@ defmodule Dataflow.Transforms.Fns.WindowFn.Fixed do
       in range [0, size).
   """
 
-  alias Dataflow.Transforms.Fns.WindowFn
+  alias Dataflow.Window.WindowFn
 
   defstruct size: nil, offset: nil
 
@@ -35,7 +35,7 @@ defmodule Dataflow.Transforms.Fns.WindowFn.Fixed do
 
   defimpl WindowFn.Callable do
     use WindowFn
-    alias Dataflow.Transforms.Fns.WindowFn.Fixed
+    alias Dataflow.Window.WindowFn.Fixed
 
     def non_merging?(_), do: true
 

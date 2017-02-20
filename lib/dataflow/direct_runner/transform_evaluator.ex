@@ -9,6 +9,7 @@ defmodule Dataflow.DirectRunner.TransformEvaluator do
 
   @type state :: any
   @type transform :: Dataflow.PTransform.Callable.t
+  @type pvalue :: Dataflow.PValue.t
   @type element :: {
       value :: any | {any, any}, # non-keyed or keyed
       timestamp :: Time.timestamp,
@@ -16,7 +17,7 @@ defmodule Dataflow.DirectRunner.TransformEvaluator do
       #,options :: keyword ???
     }
 
-  @callback init(transform) :: {:ok, state} | {:error, any}
+  @callback init(transform, pvalue) :: {:ok, state} | {:error, any}
 
   @callback produce_elements(pos_integer, state) :: {(:active | :finished), [element], state}
 
