@@ -139,7 +139,7 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
 
     new_hold_state = nil #TODO
 
-    new_pane_state = nil #TODO
+    new_pane_state = Enum.reduce pane_states, &||/2 # reduce with logical or
 
     new_trigger_state = nil #TODO
 
@@ -179,19 +179,19 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
       Map.get_lazy state.windows, actual_window, fn ->
         # no existing state, we need to initialise it
         reducer_state = state.reducer.init(state.transform)
-        {nil, nil, nil, reducer_state} #TODO!!!!!
+        {nil, nil, false, reducer_state} #TODO!!!!!
       end
 
     case window_state do
       :closed ->
         Logger.debug "Dropping element due to closed window"
         {mapping, state}
-      {hold_state, trigger_state, pane_state, reducer_state} ->
+      {hold_state, trigger_state, _pane_state, reducer_state} ->
         # process reducer
         new_reducer_state = state.reducer.process_value(value, {key, actual_window, state.windowing, []}, reducer_state)
 
         # process pane tracking
-        new_pane_state = pane_state
+        new_pane_state = true
 
         # process holds
         new_hold_state = hold_state
