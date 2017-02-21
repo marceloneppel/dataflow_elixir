@@ -13,6 +13,7 @@ defmodule Dataflow.Utils.Time do
   @type duration :: {:duration, time}
   @type interval :: {:interval, time, time}
   @type unit :: :seconds | :milliseconds | :microseconds
+  @type domain :: :event_time | :processing_time
 
   @spec timestamp(non_neg_integer, non_neg_integer) :: timestamp
   def timestamp(seconds, microseconds \\ 0)

@@ -57,10 +57,10 @@ defmodule Dataflow.DirectRunner.TransformEvaluator do
   end
 
   alias Dataflow.Transforms.{Core, IO}
-  alias Dataflow.DirectRunner.TransformEvaluator
+  alias Dataflow.DirectRunner.{TransformEvaluator, ReducingEvaluator}
 
   def module_for(%Core.ParDo{}), do: TransformEvaluator.ParDo
-  def module_for(%Core.GroupByKey{}), do: TransformEvaluator.GroupByKey
+  def module_for(%Core.GroupByKey{}), do: ReducingEvaluator
 
   def module_for(%IO.ReadFile{}), do: TransformEvaluator.ReadFile
   def module_for(%IO.WriteFile{}), do: TransformEvaluator.WriteFile
