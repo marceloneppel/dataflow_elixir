@@ -13,21 +13,22 @@ defmodule Dataflow.DirectRunner.TransformEvaluator do
   @type element :: {
       value :: any | {any, any}, # non-keyed or keyed
       timestamp :: Time.timestamp,
-      windows :: [Dataflow.Window.t]
-      #,options :: keyword ???
+      windows :: [Dataflow.Window.t],
+      options :: keyword
     }
+  @type watermark_update :: {:update, Time.timestamp} | :no_update
 
-  @callback init(transform, pvalue) :: {:ok, state} | {:error, any}
+  @callback init(transform, pvalue) :: {:ok, watermark_update, state} | {:error, any}
 
-  @callback produce_elements(pos_integer, state) :: {(:active | :finished), [element], state}
+  @callback produce_elements(pos_integer, state) :: {[element], watermark_update, state}
 
-  @callback transform_element(element, state) :: {[element], state}
-  @callback transform_elements([element], state) :: {[element], state}
+  @callback transform_element(element, state) :: {[element], watermark_update, state}
+  @callback transform_elements([element], state) :: {[element], watermark_update, state}
 
-  @callback consume_element(element, state) :: state
-  @callback consume_elements([element], state) :: state
+  @callback consume_element(element, state) :: {watermark_update, state}
+  @callback consume_elements([element], state) :: {watermark_update, state}
 
-  @callback update_input_watermark(Time.timestamp, state) :: {Time.timestamp, [element], state}
+  @callback update_input_watermark(Time.timestamp, state) :: {[element], watermark_update, state}
 
   @callback finish(state) :: :ok | {:error, any}
 
@@ -48,7 +49,7 @@ defmodule Dataflow.DirectRunner.TransformEvaluator do
       :reducing -> [] # require the user to implement this
       t when t == nil or t == :elementwise -> [
         quote do
-          def update_input_watermark(new_watermark, state), do: {new_watermark, [], state}
+          def update_input_watermark(new_watermark, state), do: {[], {:update, new_watermark}, state}
         end
       ]
     end

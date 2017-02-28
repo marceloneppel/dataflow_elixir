@@ -18,9 +18,9 @@ defmodule Dataflow.Transforms.Fns.DoFn do
 
   def from_function(fun) when is_function(fun, 1) do
     %__MODULE__{
-      process: fn {el, timestamp, windows} ->
+      process: fn {el, timestamp, windows, opts} ->
         fun.(el)
-        |> Enum.map(&{&1, timestamp, windows})
+        |> Enum.map(&{&1, timestamp, windows, opts})
       end
     }
   end

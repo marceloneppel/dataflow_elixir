@@ -2,8 +2,10 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
   use Dataflow.DirectRunner.TransformEvaluator, type: :reducing
 
   alias Dataflow.{Window, Utils.Time, PValue, Window.WindowingStrategy}
+  alias Dataflow.DirectRunner.ReducingEvaluator.{PaneInfoTracker, TriggerDriver, WatermarkHoldManager}
   alias Dataflow.Window.WindowFn.Callable, as: WindowFnP
   alias Dataflow.Window.OutputTimeFn
+  alias Dataflow.Window.PaneInfo
   require Time
   require Logger
 
@@ -29,7 +31,15 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
   defmodule State do
     @type key :: any
     @type value :: any
-    @type window_info :: {hold :: any, trigger :: any, pane_info :: any, elements :: %{optional(key) => Reducer.state}} | :closed
+    @type window_info :: {
+      hold :: any,
+      trigger :: any,
+      new_elements? :: boolean,
+      last_pane :: PaneInfo.t | :none,
+      elements :: %{
+        optional(key) => Reducer.state
+      }
+    } | :closed
 
     @type t :: %__MODULE__{
       windows: %{optional(Window.t) => window_info},
@@ -37,10 +47,22 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
       reducer: Reducer.t,
       trigger: TriggerDriver.instance,
       merging?: boolean,
-      transform: Dataflow.PTransform.t
+      transform: Dataflow.PTransform.t,
+      liwm: Time.timestamp,
+      lowm: Time.timestamp | :none,
+      watermark_state: WatermarkHoldManager.state
     }
 
-    defstruct windows: %{}, windowing: nil, reducer: nil, trigger: nil, merging?: true, transform: nil
+    defstruct \
+    windows: %{},
+    windowing: nil,
+    reducer: nil,
+    trigger: nil,
+    merging?: true,
+    transform: nil,
+    liwm: Time.min_timestamp(),
+    lowm: :none,
+    watermark_state: nil
   end
 
   def init(transform, input) do
@@ -117,7 +139,11 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
     # get and remove state of window_to_merge
     {window_state, windows} = Map.get_and_update! state.windows, window_to_merge, fn _ -> :pop end
 
-    windows = Map.put windows, result, window_state
+    {hold_state, trigger_state, new_elements_state, _last_pane_state, reducer_state} = window_state
+
+    new_window_state = {hold_state, trigger_state, new_elements_state, :none, reducer_state} # discard pane state
+
+    windows = Map.put windows, result, new_window_state
 
     %{state | windows: windows}
   end
@@ -131,19 +157,21 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
         Map.get_and_update! state.windows, window, fn _ -> :pop end
       end
 
-    {hold_states, trigger_states, pane_states, reducer_states} =
+    {hold_states, trigger_states, new_elements_states, _last_pane_states, reducer_states} =
       Enum.reduce window_states, {[], [], [], []},
-        fn {h, t, p, r}, {hs, ts, ps, rs} -> {[h | hs], [t | ts], [p | ps], [r | rs]} end
+        fn {h, t, e, _p, r}, {hs, ts, es, _ps, rs} -> {[h | hs], [t | ts], [e | es], nil, [r | rs]} end
 
     new_reducer_state = merge_reducer_states reducer_states, result, state
 
     new_hold_state = nil #TODO
 
-    new_pane_state = Enum.reduce pane_states, &||/2 # reduce with logical or
+    new_new_elements_state = Enum.reduce new_elements_states, &||/2 # reduce with logical or
+
+    new_last_pane_state = :none # We track fired panes only per actual window. So for a new, window, we reset the count.
 
     new_trigger_state = nil #TODO
 
-    windows = Map.put windows, result, {new_hold_state, new_trigger_state, new_pane_state, new_reducer_state}
+    windows = Map.put windows, result, {new_hold_state, new_trigger_state, new_new_elements_state, new_last_pane_state, new_reducer_state}
 
     %{state | windows: windows}
   end
@@ -178,8 +206,7 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
     window_state =
       Map.get_lazy state.windows, actual_window, fn ->
         # no existing state, we need to initialise it
-        reducer_state = state.reducer.init(state.transform)
-        {nil, nil, false, reducer_state} #TODO!!!!!
+        new_window_state(state)
       end
 
     case window_state do
@@ -219,6 +246,11 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
 
   defp get_window(mapping, window) do
     Map.get mapping, window, window
+  end
+
+  defp new_window_state(state) do
+    reducer_state = state.reducer.init(state.transform)
+    {nil, nil, false, :none, reducer_state} #TODO!!!!!
   end
 
 end
