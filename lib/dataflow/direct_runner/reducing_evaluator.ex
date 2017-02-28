@@ -213,12 +213,14 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
       :closed ->
         Logger.debug "Dropping element due to closed window"
         {mapping, state}
-      {hold_state, trigger_state, _pane_state, reducer_state} ->
+      {hold_state, trigger_state, _el_state, pane_state, reducer_state} ->
         # process reducer
         new_reducer_state = state.reducer.process_value(value, {key, actual_window, state.windowing, []}, reducer_state)
 
         # process pane tracking
-        new_pane_state = true
+        new_el_state = true
+
+        new_pane_state = pane_state
 
         # process holds
         new_hold_state = hold_state
@@ -228,7 +230,7 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
         # process trigger
         new_trigger_state = trigger_state
 
-        new_window_state = {new_hold_state, new_trigger_state, new_pane_state, new_reducer_state}
+        new_window_state = {new_hold_state, new_trigger_state, new_el_state, new_pane_state, new_reducer_state}
 
         windows = Map.put state.windows, actual_window, new_window_state
         {mapping, %{state | windows: windows}}
