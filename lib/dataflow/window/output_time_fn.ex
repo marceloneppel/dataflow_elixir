@@ -91,7 +91,7 @@ defmodule Dataflow.Window.OutputTimeFn do
 
   The default implementation returns `false`.
   """
-  @callback depends_only_on_earlier_input_timestamp? :: boolean
+  @callback depends_only_on_earliest_input_timestamp? :: boolean
 
   @doc """
   Returns `true` if the result does not depend on what outputs were combined but only the window they are in. The
@@ -123,11 +123,11 @@ defmodule Dataflow.Window.OutputTimeFn do
         combine_all(merging_timestamps)
       end
 
-      def depends_only_on_earlier_input_timestamp?, do: false
+      def depends_only_on_earliest_input_timestamp?, do: false
 
       def depends_only_on_window?, do: false
 
-      defoverridable [combine: 2, combine_all: 1, merge: 2, depends_only_on_earlier_input_timestamp?: 0, depends_only_on_window?: 0]
+      defoverridable [combine: 2, combine_all: 1, merge: 2, depends_only_on_earliest_input_timestamp?: 0, depends_only_on_window?: 0]
     end
   end
 end

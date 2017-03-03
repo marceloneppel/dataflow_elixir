@@ -17,6 +17,6 @@ defmodule Dataflow.Window.OutputTimeFn.OutputAtEarliestInputTimestamp do
     input_timestamp
   end
 
-  def depends_only_on_earlier_input_timestamp?, do: true
+  def depends_only_on_earliest_input_timestamp?, do: true
 
 end

@@ -44,7 +44,7 @@ defmodule Dataflow.Utils.Time do
 
   @spec interval(timestamp, duration) :: interval
   def interval({:timestamp, tstart}, {:duration, duration}) do
-    {:interval, tstart, add(tstart, duration)}
+    {:interval, tstart, tstart + duration}
   end
 
   @spec timestamp?(any) :: boolean
