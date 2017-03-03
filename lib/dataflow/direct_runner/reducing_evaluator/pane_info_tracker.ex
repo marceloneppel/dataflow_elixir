@@ -16,10 +16,10 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator.PaneInfoTracker do
   @typep previous_pane :: PaneInfo.t | :none
   @typep window_max_timestamp :: Time.timestamp
 
-  @spec get_next(window, previous_pane, output_watermark, input_watermark) :: PaneInfo.t
+  @spec get_next(window, previous_pane, output_watermark, input_watermark, last?) :: PaneInfo.t
     when window: Window.t, previous_pane: PaneInfo.t | :none,
-         output_watermark: Time.timestamp | :none, input_watermark: Time.timestamp
-  def get_next(window, previous_pane, out_wm, in_wm) do
+         output_watermark: Time.timestamp | :none, input_watermark: Time.timestamp, last?: boolean
+  def get_next(window, previous_pane, out_wm, in_wm, last?) do
     max_win_ts = Window.max_timestamp window
     first? = (previous_pane == :none)
     {index, non_spec_index} =
