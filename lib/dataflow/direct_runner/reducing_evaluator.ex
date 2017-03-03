@@ -135,7 +135,7 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
     Enum.reduce merge_result, state, &merge_windows/2
   end
 
-  defp merge_windows({[window_to_merge], result}, state) do
+  defp merge_windows({[window_to_merge], result_window}, state) do
     # only one window to merge, so just do a replacement
 
     # get and remove state of window_to_merge
@@ -143,19 +143,21 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
 
     {hold_state, trigger_state, new_elements_state, _last_pane_state, reducer_state} = window_state
 
+    hold_state = WatermarkHoldManager.merge([hold_state], hold_state, result_window, state.liwm, state.lowm, state.windowing_strategy) # possibly need to recalculate holds in new window
+
     new_window_state = {hold_state, trigger_state, new_elements_state, :none, reducer_state} # discard pane state
 
-    windows = Map.put windows, result, new_window_state
+    windows = Map.put windows, result_window, new_window_state
 
     %{state | windows: windows}
   end
 
-  defp merge_windows({to_merge, result}, state) do
+  defp merge_windows({windows_to_merge, result_window}, state) do
     # todo check invariants
 
     # get window states, and remove them from the map at the same time
     {window_states, windows} =
-      Enum.map_reduce to_merge, state.windows, fn window ->
+      Enum.map_reduce windows_to_merge, state.windows, fn window ->
         # this returns a tuple with the value and new map, which then is treated as the appropriate result for map_reduce
         Map.get_and_update! state.windows, window, fn _ -> :pop end
       end
@@ -164,17 +166,21 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
       Enum.reduce window_states, {[], [], [], []},
         fn {h, t, e, _p, r}, {hs, ts, es, _ps, rs} -> {[h | hs], [t | ts], [e | es], nil, [r | rs]} end
 
-    new_reducer_state = merge_reducer_states reducer_states, result, state
+    new_reducer_state = merge_reducer_states reducer_states, result_window, state
 
-    new_hold_state = nil #TODO
+    # we are guaranteed that if `result_window` already has state, then it is also part of `windows_to_merge`
+    # hence it is valid to merge hold states into a brand new state, instead of having to separate out the result_window state
+    # todo check if this is true.
+    blank_hold_state = WatermarkHoldManager.init()
+    new_hold_state = WatermarkHoldManager.merge(hold_states, blank_hold_state, result_window, state.liwm, state.lowm, state.windowing_strategy)
 
     new_new_elements_state = Enum.reduce new_elements_states, &||/2 # reduce with logical or
 
-    new_last_pane_state = :none # We track fired panes only per actual window. So for a new, window, we reset the count.
+    new_last_pane_state = :none # We track fired panes only per actual window. So for a new window, we reset the count.
 
     new_trigger_state = nil #TODO
 
-    windows = Map.put windows, result, {new_hold_state, new_trigger_state, new_new_elements_state, new_last_pane_state, new_reducer_state}
+    windows = Map.put windows, result_window, {new_hold_state, new_trigger_state, new_new_elements_state, new_last_pane_state, new_reducer_state}
 
     %{state | windows: windows}
   end
@@ -226,12 +232,14 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
         new_pane_state = pane_state
 
         # process holds
-        new_hold_state = hold_state
+        {_hold, new_hold_state} = WatermarkHoldManager.add_holds(hold_state, timestamp, actual_window, state.liwm, state.lowm, state.windowing_strategy)
+
+        #todo assert that holds have a proximate timer
 
         # process timers?
 
         # process trigger
-        new_trigger_state = trigger_state
+        new_trigger_state = trigger_state # todo
 
         new_window_state = {new_hold_state, new_trigger_state, new_el_state, new_pane_state, new_reducer_state}
 
@@ -254,8 +262,13 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
   end
 
   defp new_window_state(state) do
+    hold_state = WatermarkHoldManager.init()
+    trigger_state = nil
+    new_elements_state = false
+    pane_state = :none
     reducer_state = state.reducer.init(state.transform)
-    {nil, nil, false, :none, reducer_state} #TODO!!!!!
+
+    {hold_state, trigger_state, new_elements_state, pane_state, reducer_state} #TODO!!!!!
   end
 
 end

@@ -21,12 +21,12 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator.WatermarkHoldManager do
   The hold will remain until cleared by `extract_and_release`. Returns the timestamp at which
   the hold was placed, or `:none` if no hold was placed (along with the new state).
   """
-  def add_holds(state, value, timestamp, window, liwm, lowm, windowing_strategy) do
+  def add_holds(state, timestamp, window, liwm, lowm, windowing_strategy) do
     # this is a non-conventional use of `with`. Typically we have a sequence of matches, where we want to abort on
     # failure. Here, we want to abort on success, and fall through to a fallback hold on failure. Therefore we
     # try to match on failure. If the return value is not `:none`, the `with` block will return the (successful) result.
 
-    with {:none, state} <- add_element_hold(state, value, timestamp, window, liwm, lowm, windowing_strategy),
+    with {:none, state} <- add_element_hold(state, timestamp, window, liwm, lowm, windowing_strategy),
       {:none, state} <- add_eow_hold(state, window, liwm, lowm, windowing_strategy, false),
       do: add_gc_hold(state, window, liwm, lowm, windowing_strategy, false)
   end
@@ -96,7 +96,7 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator.WatermarkHoldManager do
   #
   # The hold ensures the pane which incorporates the element will not be considered late by any downstream computation
   # when it is eventually emitted.
-  defp add_element_hold(state, value, timestamp, window, liwm, lowm, windowing_strategy) do
+  defp add_element_hold(state, timestamp, window, liwm, lowm, windowing_strategy) do
     # Shift the hold according to the output function
     # This may only shift the hold forward, giving earlier windows a chance to close quicker.
     element_hold = windowing_strategy.output_time_fn.assign_output_time(window, timestamp)
