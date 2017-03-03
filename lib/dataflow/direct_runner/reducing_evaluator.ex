@@ -67,6 +67,7 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
 
   def init(transform, input) do
     {:ok,
+      :no_update,
       %State{
         windowing: input.windowing_strategy,
         reducer: Reducer.module_for(transform),
@@ -83,11 +84,12 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
 
     # now check for trigger firings
 
-    {[], state}
+    {[], :no_update, state}
   end
 
   def update_input_watermark(watermark, state) do
     # TODO
+    {[], :no_update, state}
   end
 
   def finish(_state) do
@@ -154,6 +156,7 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
     # get window states, and remove them from the map at the same time
     {window_states, windows} =
       Enum.map_reduce to_merge, state.windows, fn window ->
+        # this returns a tuple with the value and new map, which then is treated as the appropriate result for map_reduce
         Map.get_and_update! state.windows, window, fn _ -> :pop end
       end
 

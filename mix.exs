@@ -4,7 +4,7 @@ defmodule Dataflow.Mixfile do
   def project do
     [app: :dataflow_elixir,
      version: "0.1.0",
-     elixir: "~> 1.3",
+     elixir: "~> 1.4",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      deps: deps()]
@@ -33,6 +33,7 @@ defmodule Dataflow.Mixfile do
       {:gen_stage, "~> 0.11"},
       {:apex, "~>0.7.0"},
       {:priority_queue, "~>1.0"},
+      {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
     ]
   end
 end

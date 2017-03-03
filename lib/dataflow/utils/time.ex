@@ -200,7 +200,7 @@ defmodule Dataflow.Utils.Time do
   """
   @spec latest_timestamp(interval) :: timestamp
   def latest_timestamp({:interval, _tstart, tend}) do
-    tend - 1
+    {:timestamp, tend - 1}
   end
 
   @doc """
