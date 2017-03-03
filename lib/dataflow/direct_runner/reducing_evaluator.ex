@@ -209,7 +209,7 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
     raise "An unwindowed element was encountered."
   end
 
-  defp process_element({{key, value}, timestamp, [window]}, {mapping, state}) do
+  defp process_element({{key, value}, timestamp, [window]} = element, {mapping, state}) do
     actual_window = get_window(mapping, window)
 
     window_state =
@@ -220,16 +220,16 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
 
     case window_state do
       :closed ->
-        Logger.debug "Dropping element due to closed window"
+        Logger.debug fn -> "Dropping element <#{inspect element}> due to closed window #{inspect actual_window}" end
         {mapping, state}
-      {hold_state, trigger_state, _el_state, pane_state, reducer_state} ->
+      {hold_state, trigger_state, _new_el_state, pane_state, reducer_state} ->
         # process reducer
         new_reducer_state = state.reducer.process_value(value, {key, actual_window, state.windowing, []}, reducer_state)
 
         # process pane tracking
-        new_el_state = true
+        new_new_el_state = true
 
-        new_pane_state = pane_state
+        new_pane_state = pane_state # pane state only changes on firing
 
         # process holds
         {_hold, new_hold_state} = WatermarkHoldManager.add_holds(hold_state, timestamp, actual_window, state.liwm, state.lowm, state.windowing_strategy)
@@ -241,7 +241,7 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
         # process trigger
         new_trigger_state = trigger_state # todo
 
-        new_window_state = {new_hold_state, new_trigger_state, new_el_state, new_pane_state, new_reducer_state}
+        new_window_state = {new_hold_state, new_trigger_state, new_new_el_state, new_pane_state, new_reducer_state}
 
         windows = Map.put state.windows, actual_window, new_window_state
         {mapping, %{state | windows: windows}}
