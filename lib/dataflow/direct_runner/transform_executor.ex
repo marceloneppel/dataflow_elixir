@@ -10,8 +10,6 @@ defmodule Dataflow.DirectRunner.TransformExecutor do
   alias Dataflow.Utils.Time
   require Time
 
-
-
   defmodule InternalState do
 
     @type t :: %__MODULE__{
@@ -35,6 +33,19 @@ defmodule Dataflow.DirectRunner.TransformExecutor do
     def consumer?(%__MODULE__{mode: :prducer_consumer}), do: true
     def consumer?(%__MODULE__{mode: :consumer}), do: true
   end
+
+  # Public API
+
+  def notify_of_timers(pid, timers) do
+    GenStage.cast pid, {:timers, timers}
+  end
+
+  def notify_downstream_of_advanced_owm(pid, new_wm) do
+    GenStage.cast pid, {:advance_owm, new_wm}
+  end
+
+
+
 
   #TODO change this once the tree is dynamic
   defp via_transform_registry(transform_id) do

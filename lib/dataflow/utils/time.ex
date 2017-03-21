@@ -6,6 +6,8 @@ defmodule Dataflow.Utils.Time do
   end.
   """
 
+  import Kernel, except: [max: 2, min: 2]
+
   @type type :: :timestamp | :duration
   @opaque time :: non_neg_integer | :max | :min
   @type t :: {type, time}
@@ -138,6 +140,12 @@ defmodule Dataflow.Utils.Time do
     end
   end
 
+  @spec later(t, t) :: t
+  def later(a, b), do: max(a, b)
+
+  @spec earlier(t, t) :: t
+  def earlier(a, b), do: min(a, b)
+
   @spec add(timestamp, duration) :: timestamp
   def add({:timestamp, t}, {:duration, d}) do
     {:timestamp, t + d}
@@ -231,5 +239,14 @@ defmodule Dataflow.Utils.Time do
   @spec span(interval, interval) :: interval
   def span({:interval, tstart1, tend1}, {:interval, tstart2, tend2}) do
     {:interval, Kernel.min(tstart1, tstart2), Kernel.max(tend1, tend2)}
+  end
+
+
+  @doc false
+  defmacro __using__(_opts) do
+    quote do
+      alias unquote(__MODULE__)
+      require unquote(__MODULE__)
+    end
   end
 end
