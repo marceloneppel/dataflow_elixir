@@ -42,6 +42,18 @@ defmodule Dataflow.DirectRunner.TimingManager do
     GenServer.call pid, {:clear_timer, namespace, id, domain}
   end
 
+  def get_liwm(pid) do
+    GenServer.call pid, :get_liwm
+  end
+
+  def get_lowm(pid) do
+    GenServer.call pid, :get_lowm
+  end
+
+  def get_wm_hold(pid) do
+    GenServer.call pid, :get_wm_hold
+  end
+
   #def get_timers(time, domain)
 
   def advance_input_watermark(pid, new_watermark) do
@@ -67,6 +79,11 @@ defmodule Dataflow.DirectRunner.TimingManager do
   def handle_call({:clear_timer, namespace, id, domain}, _from, state), do: do_clear_timer(namespace, id, domain, state)
   def handle_call({:advance_input_watermark, new_watermark}, _from, state), do: do_advance_input_watermark(new_watermark, state)
   def handle_call({:update_data_hold, new_hold}, _from, state), do: do_update_data_hold(new_hold, state)
+
+  def handle_call(:get_liwm, _from, state), do: {:reply, state.liwm, state}
+  def handle_call(:get_lowm, _from, state), do: {:reply, state.lowm, state}
+  def handle_call(:get_wm_hold, _from, state), do: {:reply, state.wm_hold, state}
+
 
   # private processing
 

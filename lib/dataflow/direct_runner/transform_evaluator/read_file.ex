@@ -6,19 +6,19 @@ defmodule Dataflow.DirectRunner.TransformEvaluator.ReadFile do
   alias Dataflow.Utils.Time
   require Time
 
-  def init(%ReadFile{filename: filename}, input) do
+  alias Dataflow.DirectRunner.TimingManager, as: TM
+
+  def init(%ReadFile{filename: filename}, input, timing_manager) do
     unless (Dataflow.PValue.dummy? input), do: raise "Input to ReadFile must be a dummy."
-    {:ok, :no_update, File.open(filename, [:utf8, :read])}
+    {:ok, {File.open(filename, [:utf8, :read]), timing_manager}}
   end
 
-  def produce_elements(number, file) do
+  def produce_elements(number, {file, tm} = state) do
     {status, elements} = do_produce_elements(number, file)
-    watermark =
-      case status do
-        :active -> :no_update
-        :finished -> {:update, Time.max_timestamp()}
-      end
-    {elements, watermark, file}
+    if status == :finished do
+      TM.advance_input_watermark tm, Time.max_timestamp
+    end
+    {elements, state}
   end
 
   defp do_produce_elements(number, file, elements \\ [])

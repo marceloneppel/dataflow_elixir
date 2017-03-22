@@ -88,12 +88,12 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
 
     # now check for trigger firings
 
-    {[], :no_update, state}
+    {[], state}
   end
 
   def update_input_watermark(watermark, state) do
     # TODO
-    {[], :no_update, state}
+    {[], state}
   end
 
   def finish(_state) do

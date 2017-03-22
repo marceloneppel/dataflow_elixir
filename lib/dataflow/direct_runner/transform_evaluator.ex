@@ -11,31 +11,38 @@ defmodule Dataflow.DirectRunner.TransformEvaluator do
   @type transform :: Dataflow.PTransform.Callable.t
   @type pvalue :: Dataflow.PValue.t
   @type element :: {
-      value :: any | {any, any}, # non-keyed or keyed
-      timestamp :: Time.timestamp,
-      windows :: [Dataflow.Window.t],
-      options :: keyword
-    }
-  @type watermark_update :: {:update, Time.timestamp} | :no_update
+    value :: any | {any, any}, # non-keyed or keyed
+    timestamp :: Time.timestamp,
+    windows :: [Dataflow.Window.t],
+    options :: keyword
+  }
 
-  @callback init(transform, pvalue) :: {:ok, watermark_update, state} | {:error, any}
+  @type timer :: {
+    namespace :: atom | String.t,
+    id :: any,
+    time :: Time.timestamp,
+    domain :: :event_time
+  }
 
-  @callback produce_elements(pos_integer, state) :: {[element], watermark_update, state}
+  @callback init(transform, pvalue, timing_manager :: pid) :: {:ok, state} | {:error, any}
 
-  @callback transform_element(element, state) :: {[element], watermark_update, state}
-  @callback transform_elements([element], state) :: {[element], watermark_update, state}
+  @callback produce_elements(pos_integer, state) :: {[element], state}
 
-  @callback consume_element(element, state) :: {watermark_update, state}
-  @callback consume_elements([element], state) :: {watermark_update, state}
+  @callback transform_element(element, state) :: {[element], state}
+  @callback transform_elements([element], state) :: {[element], state}
 
-  @callback update_input_watermark(Time.timestamp, state) :: {[element], watermark_update, state}
+  @callback consume_element(element, state) :: state
+  @callback consume_elements([element], state) :: state
+
+  @callback fire_timers([timer], state) :: {[element], state}
 
   @callback finish(state) :: :ok | {:error, any}
 
   @optional_callbacks \
     produce_elements: 2,
     transform_element: 2, transform_elements: 2,
-    consume_element: 2, consume_elements: 2
+    consume_element: 2, consume_elements: 2,
+    fire_timers: 2
 
 
   defmacro __using__(opts) do

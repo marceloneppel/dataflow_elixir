@@ -10,6 +10,8 @@ defmodule Dataflow.DirectRunner.TransformExecutor do
   alias Dataflow.Utils.Time
   require Time
 
+  alias Dataflow.DirectRunner.TimingManager, as: TM
+
   defmodule InternalState do
 
     @type t :: %__MODULE__{
@@ -17,13 +19,10 @@ defmodule Dataflow.DirectRunner.TransformExecutor do
       applied_transform: Dataflow.Pipeline.AppliedTransform.t,
       callback_module: Dataflow.DirectRunner.TransformEvaluator.t,
       evaluator_state: any,
-      local_input_wm: Time.timestamp, # nil for producers
-      local_output_wm: Time.timestamp | nil, # nil for consumers
+      timing_manager: pid
     }
 
-    #TODO specialised state for watermarks?
-
-    defstruct [:mode, :applied_transform, :callback_module, :evaluator_state, :local_input_wm, :local_output_wm]
+    defstruct [:mode, :applied_transform, :callback_module, :evaluator_state, :timing_manager]
 
     def producer?(%__MODULE__{mode: :producer}), do: true
     def producer?(%__MODULE__{mode: :producer_consumer}), do: true
@@ -85,10 +84,13 @@ defmodule Dataflow.DirectRunner.TransformExecutor do
         [subscribe_to: [via_transform_registry(input.producer)]]
       end
 
+    timing_manager = TM.start_linked()
+
     Logger.debug "Options: #{inspect opts}"
 
     evaluator_module = Dataflow.DirectRunner.TransformEvaluator.module_for transform
-    {:ok, evaluator_state} = evaluator_module.init(transform, input)
+    {:ok, evaluator_state} = evaluator_module.init(transform, input, timing_manager)
+
 
     Logger.debug "Started with mode #{mode}."
 
@@ -97,7 +99,7 @@ defmodule Dataflow.DirectRunner.TransformExecutor do
       applied_transform: at,
       callback_module: evaluator_module,
       evaluator_state: evaluator_state,
-      local_input_wm: Time.min_timestamp
+      timing_manager: timing_manager
     }
 
     {mode, state, opts}
@@ -105,32 +107,9 @@ defmodule Dataflow.DirectRunner.TransformExecutor do
 
   def handle_demand(demand, %InternalState{mode: :producer, applied_transform: at, callback_module: module, evaluator_state: state} = ex_state) do
     Logger.debug fn -> "#{transform_label(at)}: demand of #{demand} received." end
-    {status, results, new_state} = module.produce_elements(demand, state)
+    {results, new_state} = module.produce_elements(demand, state) # todo allow demand buffering
     new_int_state = %{ex_state | evaluator_state: new_state}
-    case status do
-      :active -> {:noreply, results, new_int_state}
-      :finished ->
-        new_int_state = advance_output_watermark(Time.max_timestamp, new_int_state)
-        enqueue_finish_shutdown()
-        {:noreply, results, new_int_state} #TODO! Stop?? Finish?
-    end
-  end
-
-  defp advance_output_watermark(_, %InternalState{mode: :consumer, applied_transform: at}) do
-    Logger.debug fn -> "#{transform_label(at)}: not advancing output watermark because is consumer" end
-  end
-
-  defp advance_output_watermark(watermark, %InternalState{applied_transform: at, local_output_wm: lowm} = state) do
-    case watermark do
-      ^lowm ->
-        Logger.debug fn -> "#{transform_label(at)}: no change in watermark" end
-        state
-      new_watermark ->
-        Logger.debug fn -> "#{transform_label(at)}: advancing output watermark to #{inspect watermark}" end
-        GenStage.async_notify(self(), {:watermark, new_watermark})
-        %{state | local_output_wm: watermark}
-    end
-
+    {:noreply, results, new_int_state}
   end
 
   def handle_events(elements, _from, %InternalState{mode: :producer_consumer, callback_module: module, evaluator_state: state} = ex_state) do
@@ -143,33 +122,29 @@ defmodule Dataflow.DirectRunner.TransformExecutor do
     {:noreply, [], %{ex_state | evaluator_state: new_state}}
   end
 
-  def handle_info({_from, {:watermark, new_watermark}}, %InternalState{callback_module: module, evaluator_state: state, local_input_wm: _liwm} = ex_state) do
-    # notify internal execution module that watermark has changed
-    {output_watermark, events, new_ev_state} = module.update_input_watermark new_watermark, state # triggers etc are in here
+  def handle_info({_from, {:watermark, new_watermark}}, ex_state) do
+    TM.advance_input_watermark(ex_state.timing_manager, new_watermark)
 
-    Logger.debug fn -> "#{transform_label(ex_state.applied_transform)}: I received an input watermark of #{inspect new_watermark} and my new output watermark is #{inspect output_watermark}." end
+    Logger.debug fn -> "#{transform_label(ex_state.applied_transform)}: I received an input watermark of #{inspect new_watermark}." end
 
-    new_state = advance_output_watermark(output_watermark, %{ex_state | evaluator_state: new_ev_state})
-
-    if new_watermark == Time.max_timestamp do
-      enqueue_finish_shutdown()
-    end
-
-    {:noreply, events, new_state}
+    {:noreply, [], ex_state}
   end
 
-  def handle_info(:"$pipeline_finished", state) do
-    Logger.info "#{transform_label(state.applied_transform)}: shutting down executor due to pipeline finished."
-    {:stop, :normal, state}
+  def handle_info({_from, {:timers, timers}}, %InternalState{callback_module: module, evaluator_state: state} = ex_state) do
+    {elements, new_state} = module.fire_timers timers, state
+
+    Logger.debug fn -> "#{transform_label(ex_state.applied_transform)}: I received timers: #{inspect timers} and on firing they produced #{Enum.count elements} elements." end
+
+    {:noreply, elements, %{ex_state | evaluator_state: new_state}}
   end
+
+  def handle_info({_from, {:advance_owm, new_owm}}, ex_state) do
+    Logger.debug fn -> "#{transform_label(ex_state.applied_transform)}: advancing output watermark to #{inspect new_owm}" end
+    GenStage.async_notify(self(), {:watermark, new_owm})
+  end
+
 
   defp transform_label(at) do
     "<#{Utils.make_transform_label at, newline: false}>"
-  end
-
-  defp enqueue_finish_shutdown() do
-    Logger.debug "#{inspect self()} enqueuing a shutdown message"
-    #TODO preserve chain of shutdowns
-    #Process.send self, :"$pipeline_finished", []
   end
 end
