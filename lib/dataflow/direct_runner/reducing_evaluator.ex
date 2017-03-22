@@ -6,6 +6,7 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
   alias Dataflow.Window.WindowFn.Callable, as: WindowFnP
   alias Dataflow.Window.OutputTimeFn
   alias Dataflow.Window.PaneInfo
+  alias Dataflow.DirectRunner.TimingManager, as: TM
   require Time
   require Logger
 
@@ -49,25 +50,23 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
       trigger: Trigger.t,
       merging?: boolean,
       transform: Dataflow.PTransform.t,
-      liwm: Time.timestamp,
-      lowm: Time.timestamp | :none,
-      watermark_state: WatermarkHoldManager.state
+      watermark_state: WatermarkHoldManager.state,
+      timing_manager: pid
     }
 
     defstruct \
-    windows: %{},
-    windowing: nil,
-    reducer: nil,
-    trigger_driver: nil,
-    trigger: nil,
-    merging?: true,
-    transform: nil,
-    liwm: Time.min_timestamp(),
-    lowm: :none,
-    watermark_state: nil
+      windows: %{},
+      windowing: nil,
+      reducer: nil,
+      trigger_driver: nil,
+      trigger: nil,
+      merging?: true,
+      transform: nil,
+      watermark_state: nil,
+      timing_manager: nil
   end
 
-  def init(transform, input) do
+  def init(transform, input, timing_manager) do
     {:ok,
       :no_update,
       %State{
@@ -76,7 +75,8 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
         merging?: not WindowFnP.non_merging?(input.windowing_strategy.window_fn),
         transform: transform,
         trigger_driver: TriggerDriver.module_for(input.windowing_strategy.trigger),
-        trigger: input.windowing_strategy_trigger
+        trigger: input.windowing_strategy_trigger,
+        timing_manager: timing_manager
       }
      }
   end
@@ -86,7 +86,9 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
 
     state = state |> process_elements(elements, mapping)
 
-    # now check for trigger firings
+    # we're done processing holds
+    TM.refresh_hold(state.timing_manager)
+
 
     {[], state}
   end
@@ -147,7 +149,14 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
 
     {hold_state, trigger_state, new_elements_state, _last_pane_state, reducer_state} = window_state
 
-    hold_state = WatermarkHoldManager.merge([hold_state], hold_state, result_window, state.liwm, state.lowm, state.windowing_strategy) # possibly need to recalculate holds in new window
+    liwm = get_liwm state
+    lowm = get_lowm state
+
+    {new_hold, hold_state} = WatermarkHoldManager.merge([hold_state], hold_state, result_window, liwm, lowm, state.windowing_strategy) # possibly need to recalculate holds in new window
+
+    TM.remove_hold(state.timing_manager, window_to_merge)
+    TM.update_hold(state.timing_manager, result_window, new_hold)
+
 
     # todo need to recalculate trigger state maybe?
 
@@ -174,11 +183,17 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
 
     new_reducer_state = merge_reducer_states reducer_states, result_window, state
 
+    liwm = get_liwm state
+    lowm = get_lowm state
+
     # we are guaranteed that if `result_window` already has state, then it is also part of `windows_to_merge`
     # hence it is valid to merge hold states into a brand new state, instead of having to separate out the result_window state
     # todo check if this is true.
     blank_hold_state = WatermarkHoldManager.init()
-    new_hold_state = WatermarkHoldManager.merge(hold_states, blank_hold_state, result_window, state.liwm, state.lowm, state.windowing_strategy)
+    {new_hold, new_hold_state} = WatermarkHoldManager.merge(hold_states, blank_hold_state, result_window, liwm, lowm, state.windowing_strategy)
+
+    TM.remove_holds(state.timing_manager, windows_to_merge)
+    TM.update_hold(state.timing_manager, result_window, new_hold)
 
     new_new_elements_state = Enum.reduce new_elements_states, &||/2 # reduce with logical or
 
@@ -186,7 +201,7 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
 
     old_trigger_state = nil #TODO!!!!! refactor
 
-    {timer_cmds, new_trigger_state} = state.trigger_driver.merge(trigger_states, old_trigger_state, state.liwm) #todo: work out getting old state, check validity of liwm param
+    new_trigger_state = state.trigger_driver.merge(trigger_states, old_trigger_state, liwm) #todo: work out getting old state, check validity of liwm param
     # todo process timers
 
     windows = Map.put windows, result_window, {new_hold_state, new_trigger_state, new_new_elements_state, new_last_pane_state, new_reducer_state}
@@ -210,7 +225,9 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
   end
 
   defp process_elements(state, elements, mapping) do
-    {_, new_state} = Enum.reduce elements, {mapping, state}, &process_element/2
+    liwm = get_liwm state
+    lowm = get_lowm state
+    {_, _, new_state} = Enum.reduce elements, {mapping, {liwm, lowm}, state}, &process_element/2
     new_state
   end
 
@@ -218,7 +235,7 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
     raise "An unwindowed element was encountered."
   end
 
-  defp process_element({{key, value}, timestamp, [window], el_opts} = element, {mapping, state}) do
+  defp process_element({{key, value}, timestamp, [window], el_opts} = element, {mapping, {liwm, lowm}, state}) do
     actual_window = get_window(mapping, window)
 
     window_state =
@@ -230,7 +247,7 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
     case window_state do
       :closed ->
         Logger.debug fn -> "Dropping element <#{inspect element}> due to closed window #{inspect actual_window}" end
-        {mapping, state}
+        {mapping, {liwm, lowm}, state}
       {hold_state, trigger_state, _new_el_state, pane_state, reducer_state} ->
         # process reducer
         new_reducer_state = state.reducer.process_value(value, {key, actual_window, state.windowing, [], el_opts}, reducer_state)
@@ -241,19 +258,21 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
         new_pane_state = pane_state # pane state only changes on firing
 
         # process holds
-        {_hold, new_hold_state} = WatermarkHoldManager.add_holds(hold_state, timestamp, actual_window, state.liwm, state.lowm, state.windowing_strategy)
+        {hold, new_hold_state} = WatermarkHoldManager.add_holds(hold_state, timestamp, actual_window, liwm, lowm, state.windowing_strategy)
+
+        TM.update_hold(state.timing_manager, window, hold)
 
         #todo assert that holds have a proximate timer
 
         # process trigger
-        {timer_cmds, new_trigger_state} = state.trigger_driver.process_element(trigger_state, timestamp, state.liwm)
+        new_trigger_state = state.trigger_driver.process_element(trigger_state, timestamp, liwm)
         # todo process timers
 
 
         new_window_state = {new_hold_state, new_trigger_state, new_new_el_state, new_pane_state, new_reducer_state}
 
         windows = Map.put state.windows, actual_window, new_window_state
-        {mapping, %{state | windows: windows}}
+        {mapping, {liwm, lowm}, %{state | windows: windows}}
     end
 
 
@@ -278,6 +297,14 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
     reducer_state = state.reducer.init(state.transform)
 
     {hold_state, trigger_state, new_elements_state, pane_state, reducer_state}
+  end
+
+  defp get_liwm(state) do
+    TM.get_liwm(state.timing_manager)
+  end
+
+  defp get_lowm(state) do
+    TM.get_lowm(state.timing_manager)
   end
 
 end

@@ -18,10 +18,11 @@ defmodule Dataflow.DirectRunner.TimingManager do
     defstruct \
       parent: nil,
       liwm: Time.min_timestamp,
-      lowm: :none,
-      event_timers: nil,
+      lowm: Time.min_timestamp,
+      event_timers: nil, # PQ with timer raw time as key
       max_event_time_timers: [],
-      wm_hold: Time.max_timestamp
+      wm_hold: Time.max_timestamp,
+      all_holds: nil # PQ with hold time as key
   end
 
   # API
@@ -60,8 +61,21 @@ defmodule Dataflow.DirectRunner.TimingManager do
     GenServer.call pid, {:advance_input_watermark, new_watermark}
   end
 
-  def update_data_hold(pid, new_hold) do
-    GenServer.call pid, {:update_data_hold, new_hold}
+  def update_hold(pid, key, hold) do
+    GenServer.call pid, {:update_hold, key, hold}
+  end
+
+  def remove_hold(pid, key) do
+    GenServer.call pid, {:remove_hold, key}
+  end
+
+  # specifically for the case when we are merging windows and want to remove multiple holds at once
+  def remove_holds(pid, keys) do
+    GenServer.call pid, {:remove_holds, keys}
+  end
+
+  def refresh_hold(pid) do
+    GenServer.call pid, :refresh_hold
   end
 
   # Callbacks
@@ -69,7 +83,8 @@ defmodule Dataflow.DirectRunner.TimingManager do
   def init(parent) do
     state = %State{
       parent: parent,
-      event_timers: PQ.new
+      event_timers: PQ.new,
+      all_holds: PQ.new
     }
 
     {:ok, state}
@@ -78,7 +93,10 @@ defmodule Dataflow.DirectRunner.TimingManager do
   def handle_call({:set_timer, namespace, id, time, domain}, _from, state), do: do_set_timer(namespace, id, time, domain, state)
   def handle_call({:clear_timer, namespace, id, domain}, _from, state), do: do_clear_timer(namespace, id, domain, state)
   def handle_call({:advance_input_watermark, new_watermark}, _from, state), do: do_advance_input_watermark(new_watermark, state)
-  def handle_call({:update_data_hold, new_hold}, _from, state), do: do_update_data_hold(new_hold, state)
+  def handle_call({:update_hold, key, hold}, _from, state), do: do_update_hold(key, hold, state)
+  def handle_call({:remove_hold, key}, _from, state), do: do_remove_hold(key, state)
+  def handle_call({:remove_holds, keys}, _from, state), do: do_remove_holds(keys, state)
+  def handle_call(:refresh_hold, _from, state), do: do_refresh_hold(state)
 
   def handle_call(:get_liwm, _from, state), do: {:reply, state.liwm, state}
   def handle_call(:get_lowm, _from, state), do: {:reply, state.lowm, state}
@@ -126,7 +144,7 @@ defmodule Dataflow.DirectRunner.TimingManager do
 
     # advance OWM as far as possible given current data holds
     # cast this message to the executor after the timer firings, in case it's a max_timestamp and we want to finish
-    {new_owm, state} = calculate_advanced_owm(state)
+    {new_owm, state} = advance_owm(state)
 
 
     # check for any new timers firing because of the time advancement
@@ -162,22 +180,69 @@ defmodule Dataflow.DirectRunner.TimingManager do
     {:reply, :ok, state}
   end
 
-  defp do_update_data_hold(new_hold, state) do
+  defp do_update_hold(key, :none, state), do: do_remove_hold(key, state)
+
+  defp do_update_hold(key, hold, state) do
+    # TODO this is really really inefficient.
+
+    # first remove the hold with this key (but actually traverse the whole list - see above.)
+    all_holds =
+      PQ.delete state.all_holds, fn
+        _time, {^key, _hold} -> true
+        _, _ -> false
+      end
+
+    # now insert the new hold
+    all_holds = PQ.put(all_holds, Time.raw(hold), {key, hold})
+
+    {:reply, :ok, %{state | all_holds: all_holds}}
+  end
+
+  defp do_remove_hold(key, state) do
+    all_holds =
+      PQ.delete state.all_holds, fn
+        _time, {^key, _hold} -> true
+        _, _ -> false
+      end
+
+    {:reply, :ok, %{state | all_holds: all_holds}}
+  end
+
+  defp do_remove_holds(keys, state) do
+    all_holds =
+      PQ.delete state.all_holds, fn
+        _time, {key, _hold} -> key in keys
+      end
+
+    {:reply, :ok, %{state | all_holds: all_holds}}
+  end
+
+  defp do_refresh_hold(state) do
     # TODO check for validity of hold wrt watermarks
     # todo clipping?
+
+    new_hold =
+      if PQ.empty? state.all_holds do
+        Time.max_timestamp
+      else
+        {_time, {_key, hold}} = PQ.peek state.all_holds
+        hold
+      end
 
     # set new internal data hold
     state = %{state | wm_hold: new_hold}
 
     # advance OWM as far as possible with the new data holds
-    # cast this message to the executor
-    {new_owm, state} = calculate_advanced_owm(state)
-    TX.notify_downstream_of_advanced_owm(state.parent, new_owm)
+    # cast this message to the executor if necessary
+    old_owm = state.lowm
+    {new_owm, state} = advance_owm(state)
+
+    unless old_owm == new_owm, do: TX.notify_downstream_of_advanced_owm(state.parent, new_owm)
 
     {:reply, :ok, state}
   end
 
-  defp calculate_advanced_owm(state) do
+  defp advance_owm(state) do
     # get that LATER of:
     # - the previous OWM
     # - the EARLIER of

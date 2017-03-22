@@ -47,11 +47,9 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator.WatermarkHoldManager do
     # again the need for this is asserted in the Java implementation, and it should be verified at some point
     state = %{state | extra_hold: :none}
 
-    {_, state} =
-      with {:none, state} <- add_eow_hold(state, window, liwm, lowm, windowing_strategy, false),
-        do: add_gc_hold(state, window, liwm, lowm, windowing_strategy, false)
 
-    state
+    with {:none, state} <- add_eow_hold(state, window, liwm, lowm, windowing_strategy, false),
+      do: add_gc_hold(state, window, liwm, lowm, windowing_strategy, false)
   end
 
   defp do_merge([], state, _window, _windowing_strategy) do
@@ -109,7 +107,7 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator.WatermarkHoldManager do
         Logger.debug fn -> "Element hold #{inspect element_hold} is too late for end-of-window timer." end
         {:none, state}
       true ->
-        {element_hold, add_hold(state, :data, element_hold, windowing_strategy)}
+        add_hold(state, :data, element_hold, windowing_strategy)
     end
   end
 
@@ -138,7 +136,7 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator.WatermarkHoldManager do
       # There is a good reason in the Java implementation to not use pane_empty? here to select whether we need to use
       # the extra hold, or whether we can fall back to the data hold. I'm not sure if it applies here, but I will retain
       # it for now.
-      {eow_hold, add_hold(state, :extra, eow_hold, windowing_strategy)}
+      add_hold(state, :extra, eow_hold, windowing_strategy)
     end
   end
 
@@ -170,7 +168,7 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator.WatermarkHoldManager do
         # unnecessary since we won't fire this pane
         {:none, state}
       true ->
-        {gc_hold, add_hold(state, :extra, gc_hold, windowing_strategy)}
+        add_hold(state, :extra, gc_hold, windowing_strategy)
     end
   end
 
@@ -179,7 +177,7 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator.WatermarkHoldManager do
       state.data_hold
       |> update_hold(hold, windowing_strategy.output_time_fn)
 
-    %{state | data_hold: new_data_hold}
+    {new_data_hold, %{state | data_hold: new_data_hold}}
   end
 
   defp add_hold(state, :extra, hold, _windowing_strategy) do
@@ -187,7 +185,7 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator.WatermarkHoldManager do
       state.extra_hold
       |> update_hold(hold, @extra_otfn)
 
-    %{state | extra_hold: new_extra_hold}
+    {new_extra_hold, %{state | extra_hold: new_extra_hold}}
   end
 
   defp update_hold(:none, hold, _otfn) do

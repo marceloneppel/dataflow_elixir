@@ -80,6 +80,13 @@ defmodule Dataflow.Utils.Time do
   defmacro zero_duration, do: quote do: {:duration, 0}
 
   @spec compare(t, t) :: boolean
+  def compare({type, :max}, {type, :max}), do: true
+  def compare({type, :min}, {type, :min}), do: true
+  def compare({type, :max}, {type, _}), do: false
+  def compare({type, _}, {type, :max}), do: true
+  def compare({type, :min}, {type, _}), do: true
+  def compare({type, _}, {type, :min}), do: false
+
   def compare({:timestamp, t1}, {:timestamp, t2}) do
     t1 <= t2
   end
