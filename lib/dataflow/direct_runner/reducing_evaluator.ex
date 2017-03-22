@@ -152,7 +152,8 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
     liwm = get_liwm state
     lowm = get_lowm state
 
-    {new_hold, hold_state} = WatermarkHoldManager.merge([hold_state], hold_state, result_window, liwm, lowm, state.windowing_strategy) # possibly need to recalculate holds in new window
+    {new_hold, new_hold_state} = WatermarkHoldManager.merge([hold_state], hold_state, result_window, liwm, lowm, state.windowing_strategy) # possibly need to recalculate holds in new window
+    new_trigger_state = state.trigger_driver.merge([trigger_state], trigger_state)
 
     TM.remove_hold(state.timing_manager, window_to_merge)
     TM.update_hold(state.timing_manager, result_window, new_hold)
@@ -160,7 +161,7 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
 
     # todo need to recalculate trigger state maybe?
 
-    new_window_state = {hold_state, trigger_state, new_elements_state, :none, reducer_state} # discard pane state
+    new_window_state = {new_hold_state, new_trigger_state, new_elements_state, :none, reducer_state} # discard pane state
 
     windows = Map.put windows, result_window, new_window_state
 
@@ -199,10 +200,9 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
 
     new_last_pane_state = :none # We track fired panes only per actual window. So for a new window, we reset the count.
 
-    old_trigger_state = nil #TODO!!!!! refactor
+    blank_trigger_state = state.trigger_driver.init(state.trigger, result_window, state.timing_manager)
 
-    new_trigger_state = state.trigger_driver.merge(trigger_states, old_trigger_state, liwm) #todo: work out getting old state, check validity of liwm param
-    # todo process timers
+    new_trigger_state = state.trigger_driver.merge(trigger_states, blank_trigger_state, liwm)
 
     windows = Map.put windows, result_window, {new_hold_state, new_trigger_state, new_new_elements_state, new_last_pane_state, new_reducer_state}
 

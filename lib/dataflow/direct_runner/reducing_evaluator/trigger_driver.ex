@@ -8,18 +8,15 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator.TriggerDriver do
   @opaque state :: any
   @type t :: module
 
-  @type timer_domain :: :event_time | :processing_time
-  @type timer_cmd :: {:set, Time.timestamp, timer_domain} | {:clear, Time.timestamp, timer_domain}
+  @callback init(Trigger.t, Window.t, timing_manager :: pid) :: state
 
-  @callback init(Trigger.t, Window.t) :: state
+  @callback process_element(state, Time.timestamp) :: state
 
-  @callback process_element(state, Time.timestamp, event_time :: Time.timestamp) :: {[timer_cmd], state}
+  @callback merge([state], state) :: state
 
-  @callback merge([state], state, event_time :: Time.timestamp) :: {[timer_cmd], state}
+  @callback should_fire?(state) :: boolean
 
-  @callback should_fire?(state, event_time :: Time.timestamp) :: boolean
-
-  @callback fired(state, event_time :: Time.timestamp) :: state
+  @callback fired(state) :: state
 
   @callback finished?(state) :: boolean
 

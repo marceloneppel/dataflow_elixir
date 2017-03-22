@@ -43,6 +43,10 @@ defmodule Dataflow.DirectRunner.TimingManager do
     GenServer.call pid, {:clear_timer, namespace, id, domain}
   end
 
+  def clear_timers(pid, namespace, ids, domain) do
+    GenServer.call pid, {:clear_timers, namespace, ids, domain}
+  end
+
   def get_liwm(pid) do
     GenServer.call pid, :get_liwm
   end
@@ -92,6 +96,7 @@ defmodule Dataflow.DirectRunner.TimingManager do
 
   def handle_call({:set_timer, namespace, id, time, domain}, _from, state), do: do_set_timer(namespace, id, time, domain, state)
   def handle_call({:clear_timer, namespace, id, domain}, _from, state), do: do_clear_timer(namespace, id, domain, state)
+  def handle_call({:clear_timers, namespace, ids, domain}, _from, state), do: do_clear_timers(namespace, ids, domain, state)
   def handle_call({:advance_input_watermark, new_watermark}, _from, state), do: do_advance_input_watermark(new_watermark, state)
   def handle_call({:update_hold, key, hold}, _from, state), do: do_update_hold(key, hold, state)
   def handle_call({:remove_hold, key}, _from, state), do: do_remove_hold(key, state)
@@ -107,6 +112,7 @@ defmodule Dataflow.DirectRunner.TimingManager do
 
   defp do_set_timer(namespace, id, Time.max_timestamp, :event_time, state) do
     # TODO!!! check if this ID has already been inserted
+    # todo do we fire a timer now if the current time is past the timer time?
     max_event_time_timers = [{namespace, id, Time.max_timestamp, :event_time} | state.max_event_time_timers]
     {:reply, :ok, %{state | max_event_time_timers: max_event_time_timers}}
   end
@@ -132,7 +138,21 @@ defmodule Dataflow.DirectRunner.TimingManager do
           _ -> false
       end
 
-    %{state | event_timers: event_timers, max_event_time_timers: max_event_time_timers}
+    {:reply, :ok, %{state | event_timers: event_timers, max_event_time_timers: max_event_time_timers}}
+  end
+
+  defp do_clear_timers(namespace, ids, :event_time, state) do
+    event_timers = PQ.delete state.event_timers,
+      fn
+        _, {^namespace, id, _, :event_time} -> id in ids
+      end
+
+    max_event_time_timers = Enum.reject state.max_event_time_timers,
+      fn
+          {^namespace, id, _, :event_time} -> id in ids
+      end
+
+    {:reply, :ok, %{state | event_timers: event_timers, max_event_time_timers: max_event_time_timers}}
   end
 
   # special case for the max_timestamp---want to fire all timers, then all max event time timers, and we know we are finished

@@ -4,22 +4,29 @@ defmodule Dataflow.DirectRunner.TriggerDrivers.Default do
   alias Dataflow.{Trigger, Window, Utils.Time}
   require Time
 
-  def init(%Trigger.Default{}, window) do
-    # using window as state
-    window
+  alias Dataflow.DirectRunner.TimingManager, as: TM
+
+  defstruct [:window, :timing_manager]
+
+  def init(%Trigger.Default{}, window, tm) do
+    %__MODULE__{
+      window: window,
+      timing_manager: tm
+    }
   end
 
-  def process_element(window, _timestamp, event_time) do
+  def process_element(%__MODULE__{window: window, timing_manager: tm} = state, _timestamp, event_time) do
     # If the end of the window has already been reached, then we are already ready to fire
     # and do not need to set a wake-up timer.
     if eow_reached?(window, event_time) do
-      {[], window}
+      state
     else
-      {[{:set, Window.max_timestamp(window), :event_time}], window} # todo save in state whether we've already done this?
+      TM.set_timer(tm, :system_trigger, window, Window.max_timestamp(window), :event_time)
+      state
     end
   end
 
-  def merge(_windows, window, event_time) do
+  def merge(windows, window, event_time) do
     # If the end of the window has already been reached, then we are already ready to fire
     # and do not need to set a wake-up timer.
     if eow_reached?(window, event_time) do
