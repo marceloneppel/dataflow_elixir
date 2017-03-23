@@ -68,14 +68,13 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
 
   def init(transform, input, timing_manager) do
     {:ok,
-      :no_update,
       %State{
         windowing: input.windowing_strategy,
         reducer: Reducer.module_for(transform),
         merging?: not WindowFnP.non_merging?(input.windowing_strategy.window_fn),
         transform: transform,
         trigger_driver: TriggerDriver.module_for(input.windowing_strategy.trigger),
-        trigger: input.windowing_strategy_trigger,
+        trigger: input.windowing_strategy.trigger,
         timing_manager: timing_manager
       }
      }
@@ -152,7 +151,7 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
     liwm = get_liwm state
     lowm = get_lowm state
 
-    {new_hold, new_hold_state} = WatermarkHoldManager.merge([hold_state], hold_state, result_window, liwm, lowm, state.windowing_strategy) # possibly need to recalculate holds in new window
+    {new_hold, new_hold_state} = WatermarkHoldManager.merge([hold_state], hold_state, result_window, liwm, lowm, state.windowing) # possibly need to recalculate holds in new window
     new_trigger_state = state.trigger_driver.merge([trigger_state], trigger_state)
 
     TM.remove_hold(state.timing_manager, window_to_merge)
@@ -191,7 +190,7 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
     # hence it is valid to merge hold states into a brand new state, instead of having to separate out the result_window state
     # todo check if this is true.
     blank_hold_state = WatermarkHoldManager.init()
-    {new_hold, new_hold_state} = WatermarkHoldManager.merge(hold_states, blank_hold_state, result_window, liwm, lowm, state.windowing_strategy)
+    {new_hold, new_hold_state} = WatermarkHoldManager.merge(hold_states, blank_hold_state, result_window, liwm, lowm, state.windowing)
 
     TM.remove_holds(state.timing_manager, windows_to_merge)
     TM.update_hold(state.timing_manager, result_window, new_hold)
@@ -258,14 +257,14 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
         new_pane_state = pane_state # pane state only changes on firing
 
         # process holds
-        {hold, new_hold_state} = WatermarkHoldManager.add_holds(hold_state, timestamp, actual_window, liwm, lowm, state.windowing_strategy)
+        {hold, new_hold_state} = WatermarkHoldManager.add_holds(hold_state, timestamp, actual_window, liwm, lowm, state.windowing)
 
         TM.update_hold(state.timing_manager, window, hold)
 
         #todo assert that holds have a proximate timer
 
         # process trigger
-        new_trigger_state = state.trigger_driver.process_element(trigger_state, timestamp, liwm)
+        new_trigger_state = state.trigger_driver.process_element(trigger_state, timestamp)
         # todo process timers
 
 
@@ -291,7 +290,7 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
 
   defp new_window_state(state, window) do
     hold_state = WatermarkHoldManager.init()
-    trigger_state = state.trigger_driver.init(state.trigger, window)
+    trigger_state = state.trigger_driver.init(state.trigger, window, state.timing_manager)
     new_elements_state = false
     pane_state = :none
     reducer_state = state.reducer.init(state.transform)

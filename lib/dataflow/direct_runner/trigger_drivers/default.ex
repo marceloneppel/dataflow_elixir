@@ -15,36 +15,45 @@ defmodule Dataflow.DirectRunner.TriggerDrivers.Default do
     }
   end
 
-  def process_element(%__MODULE__{window: window, timing_manager: tm} = state, _timestamp, event_time) do
+  def process_element(%__MODULE__{window: window, timing_manager: tm} = state, _timestamp) do
     # If the end of the window has already been reached, then we are already ready to fire
     # and do not need to set a wake-up timer.
+    event_time = TM.get_liwm tm
     if eow_reached?(window, event_time) do
       state
     else
-      TM.set_timer(tm, :system_trigger, window, Window.max_timestamp(window), :event_time)
+      TM.set_timer(tm, {window, :default_trigger}, Window.max_timestamp(window), :event_time)
       state
     end
   end
 
-  def merge(windows, window, event_time) do
+  def merge(states, %__MODULE__{window: window, timing_manager: tm} = state) do
     # If the end of the window has already been reached, then we are already ready to fire
     # and do not need to set a wake-up timer.
+
+    # clear any existing timers
+    Enum.each states, fn %{window: window, timing_manager: tm} -> TM.clear_timers(tm, {window, :default_trigger}, :event_time) end
+
+    event_time = TM.get_liwm tm
+
     if eow_reached?(window, event_time) do
-      {[], window}
+      state
     else
-      {[{:set, Window.max_timestamp(window), :event_time}], window} # todo save in state whether we've already done this?
+      TM.set_timer(state.tm, {window, :default_trigger}, Window.max_timestamp(window), :event_time)
+      state
     end
   end
 
-  def should_fire?(window, event_time) do
-    eow_reached?(window, event_time)
+  def should_fire?(state) do
+    event_time = TM.get_liwm state.tm
+    eow_reached?(state.window, event_time)
   end
 
-  def fired(window, _time) do
-    window
+  def fired(state) do
+    state
   end
 
-  def finished?(window) do
+  def finished?(state) do
     false # todo check this
   end
 

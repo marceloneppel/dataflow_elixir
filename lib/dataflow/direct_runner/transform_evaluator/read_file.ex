@@ -10,7 +10,8 @@ defmodule Dataflow.DirectRunner.TransformEvaluator.ReadFile do
 
   def init(%ReadFile{filename: filename}, input, timing_manager) do
     unless (Dataflow.PValue.dummy? input), do: raise "Input to ReadFile must be a dummy."
-    {:ok, {File.open(filename, [:utf8, :read]), timing_manager}}
+    {:ok, file} = File.open(filename, [:utf8, :read])
+    {:ok, {file, timing_manager}}
   end
 
   def produce_elements(number, {file, tm} = state) do

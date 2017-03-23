@@ -20,7 +20,6 @@ defmodule Dataflow.DirectRunner.TimingManager do
       liwm: Time.min_timestamp,
       lowm: Time.min_timestamp,
       event_timers: nil, # PQ with timer raw time as key
-      max_event_time_timers: [],
       wm_hold: Time.max_timestamp,
       all_holds: nil # PQ with hold time as key
   end
@@ -35,16 +34,16 @@ defmodule Dataflow.DirectRunner.TimingManager do
     start_link(self())
   end
 
-  def set_timer(pid, namespace, id, time, domain) do
-    GenServer.call pid, {:set_timer, namespace, id, time, domain}
+  def set_timer(pid, namespace, time, domain) do
+    GenServer.call pid, {:set_timer, namespace, time, domain}
   end
 
-  def clear_timer(pid, namespace, id, domain) do
-    GenServer.call pid, {:clear_timer, namespace, id, domain}
+  def clear_timer(pid, namespace, time, domain) do
+    GenServer.call pid, {:clear_timer, namespace, time, domain}
   end
 
-  def clear_timers(pid, namespace, ids, domain) do
-    GenServer.call pid, {:clear_timers, namespace, ids, domain}
+  def clear_timers(pid, namespace, domain) do
+    GenServer.call pid, {:clear_timers, namespace, domain}
   end
 
   def get_liwm(pid) do
@@ -94,9 +93,10 @@ defmodule Dataflow.DirectRunner.TimingManager do
     {:ok, state}
   end
 
-  def handle_call({:set_timer, namespace, id, time, domain}, _from, state), do: do_set_timer(namespace, id, time, domain, state)
-  def handle_call({:clear_timer, namespace, id, domain}, _from, state), do: do_clear_timer(namespace, id, domain, state)
-  def handle_call({:clear_timers, namespace, ids, domain}, _from, state), do: do_clear_timers(namespace, ids, domain, state)
+  def handle_call({:set_timer, namespace, time, domain}, _from, state), do: do_set_timer(namespace, time, domain, state)
+  def handle_call({:clear_timer, namespace, time, domain}, _from, state), do: do_clear_timer(namespace, time, domain, state)
+  def handle_call({:clear_timers, namespace, domain}, _from, state), do: do_clear_timers(namespace, domain, state)
+
   def handle_call({:advance_input_watermark, new_watermark}, _from, state), do: do_advance_input_watermark(new_watermark, state)
   def handle_call({:update_hold, key, hold}, _from, state), do: do_update_hold(key, hold, state)
   def handle_call({:remove_hold, key}, _from, state), do: do_remove_hold(key, state)
@@ -110,49 +110,33 @@ defmodule Dataflow.DirectRunner.TimingManager do
 
   # private processing
 
-  defp do_set_timer(namespace, id, Time.max_timestamp, :event_time, state) do
+  defp do_set_timer(namespace, time, :event_time, state) do
     # TODO!!! check if this ID has already been inserted
     # todo do we fire a timer now if the current time is past the timer time?
-    max_event_time_timers = [{namespace, id, Time.max_timestamp, :event_time} | state.max_event_time_timers]
-    {:reply, :ok, %{state | max_event_time_timers: max_event_time_timers}}
-  end
-
-  defp do_set_timer(namespace, id, time, :event_time, state) do
-    # TODO!!! check if this ID has already been inserted
-    event_timers = PQ.put state.event_timers, Time.raw(time), {namespace, id, time, :event_time}
+    event_timers = PQ.put state.event_timers, Time.raw(time), {namespace, time, :event_time}
     {:reply, :ok, %{state | event_timers: event_timers}}
   end
 
-  defp do_clear_timer(namespace, id, domain, state)
+  defp do_clear_timer(namespace, time, domain, state)
 
-  defp do_clear_timer(namespace, id, :event_time, state) do
+  defp do_clear_timer(namespace, time, :event_time, state) do
     event_timers = PQ.delete state.event_timers,
       fn
-        _, {^namespace, ^id, _, :event_time} -> true
+        _, {^namespace, ^time, :event_time} -> true
         _, _ -> false
       end
 
-    max_event_time_timers = Enum.reject state.max_event_time_timers,
-      fn
-          {^namespace, ^id, _, :event_time} -> true
-          _ -> false
-      end
-
-    {:reply, :ok, %{state | event_timers: event_timers, max_event_time_timers: max_event_time_timers}}
+    {:reply, :ok, %{state | event_timers: event_timers}}
   end
 
-  defp do_clear_timers(namespace, ids, :event_time, state) do
+  defp do_clear_timers(namespace, :event_time, state) do
     event_timers = PQ.delete state.event_timers,
       fn
-        _, {^namespace, id, _, :event_time} -> id in ids
+        _, {^namespace, _, :event_time} -> true
+        _, _ -> false
       end
 
-    max_event_time_timers = Enum.reject state.max_event_time_timers,
-      fn
-          {^namespace, id, _, :event_time} -> id in ids
-      end
-
-    {:reply, :ok, %{state | event_timers: event_timers, max_event_time_timers: max_event_time_timers}}
+    {:reply, :ok, %{state | event_timers: event_timers}}
   end
 
   # special case for the max_timestamp---want to fire all timers, then all max event time timers, and we know we are finished
@@ -170,30 +154,25 @@ defmodule Dataflow.DirectRunner.TimingManager do
     # check for any new timers firing because of the time advancement
     # cast these firings to the executor
 
-    {fired_timers, state} =
+    {timers, state} =
       case new_watermark do
         Time.max_timestamp ->
-          # take all the timers and all max timestamp timers
+          # take all the timers
           {timers, event_timers} = PQ.take_all state.event_timers
 
-          # get vals
-          timers = Enum.map timers, fn {_, val} -> val end
-
-          timers = timers ++ state.max_event_time_timers
-
-          {timers, %{state | event_timers: event_timers, max_event_time_timers: []}}
+          {timers, %{state | event_timers: event_timers}}
 
         timestamp ->
           {timers, event_timers} =
             state.event_timers
             |> PQ.take_before(Time.raw(timestamp))
 
-          timers = Enum.map timers, fn {_, val} -> val end
-
           {timers, %{state | event_timers: event_timers}}
       end
 
-    TX.notify_of_timers(state.parent, fired_timers)
+    fired_timers = Enum.map timers, fn {_, val} -> val end
+
+    unless Enum.empty?(fired_timers), do: TX.notify_of_timers(state.parent, fired_timers)
     TX.notify_downstream_of_advanced_owm(state.parent, new_owm)
 
     # reply back with ok

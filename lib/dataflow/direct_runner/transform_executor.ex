@@ -84,7 +84,7 @@ defmodule Dataflow.DirectRunner.TransformExecutor do
         [subscribe_to: [via_transform_registry(input.producer)]]
       end
 
-    timing_manager = TM.start_linked()
+    {:ok, timing_manager} = TM.start_linked()
 
     Logger.debug "Options: #{inspect opts}"
 
@@ -130,7 +130,7 @@ defmodule Dataflow.DirectRunner.TransformExecutor do
     {:noreply, [], ex_state}
   end
 
-  def handle_info({_from, {:timers, timers}}, %InternalState{callback_module: module, evaluator_state: state} = ex_state) do
+  def handle_cast({:timers, timers}, %InternalState{callback_module: module, evaluator_state: state} = ex_state) do
     {elements, new_state} = module.fire_timers timers, state
 
     Logger.debug fn -> "#{transform_label(ex_state.applied_transform)}: I received timers: #{inspect timers} and on firing they produced #{Enum.count elements} elements." end
@@ -138,11 +138,11 @@ defmodule Dataflow.DirectRunner.TransformExecutor do
     {:noreply, elements, %{ex_state | evaluator_state: new_state}}
   end
 
-  def handle_info({_from, {:advance_owm, new_owm}}, ex_state) do
+  def handle_cast({:advance_owm, new_owm}, ex_state) do
     Logger.debug fn -> "#{transform_label(ex_state.applied_transform)}: advancing output watermark to #{inspect new_owm}" end
     GenStage.async_notify(self(), {:watermark, new_owm})
+    {:noreply, [], ex_state}
   end
-
 
   defp transform_label(at) do
     "<#{Utils.make_transform_label at, newline: false}>"
