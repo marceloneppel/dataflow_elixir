@@ -111,9 +111,8 @@ defmodule Dataflow.DirectRunner.TimingManager do
   # private processing
 
   defp do_set_timer(namespace, time, :event_time, state) do
-    # TODO!!! check if this ID has already been inserted
     # todo do we fire a timer now if the current time is past the timer time?
-    event_timers = PQ.put state.event_timers, Time.raw(time), {namespace, time, :event_time}
+    event_timers = PQ.put_unique state.event_timers, Time.raw(time), {namespace, time, :event_time}
     {:reply, :ok, %{state | event_timers: event_timers}}
   end
 

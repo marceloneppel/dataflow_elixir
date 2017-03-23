@@ -190,6 +190,8 @@ defmodule Dataflow.Utils.Time do
 
   def raw(t, units \\ :microseconds)
 
+  def raw({_type, t}, _unit) when is_atom(t), do: raise "Cannot get raw time for maximum or minimum timestamps or durations."
+
   def raw({:timestamp, t}, :microseconds), do: t
   def raw({:duration, t}, :microseconds), do: t
 

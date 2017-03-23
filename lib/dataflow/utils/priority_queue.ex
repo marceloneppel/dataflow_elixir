@@ -9,16 +9,35 @@ defmodule Dataflow.Utils.PriorityQueue do
 
   def put(queue, key, val), do: put(queue, key, val, [])
 
-  def put([], key, val, rest) do
+  defp put([], key, val, rest) do
     Enum.reverse(rest, [{key, val}])
   end
 
-  def put([{khead, _} | _] = list, key, val, rest) when key < khead do
+  defp put([{khead, _} | _] = list, key, val, rest) when key <= khead do
     Enum.reverse(rest, [{key, val} | list])
   end
 
-  def put([head | tail], key, val, rest) do
+  defp put([head | tail], key, val, rest) do
     put(tail, key, val, [head | rest])
+  end
+
+  def put_unique(queue, key, val), do: put_unique(queue, key, val, [], queue)
+
+  defp put_unique([], key, val, rest, _original) do
+    Enum.reverse(rest, [{key, val}])
+  end
+
+  # key is no longer equal to the next item, and we have not encountered an equal value, so place the item here.
+  defp put_unique([{khead, _} | _] = list, key, val, rest, _original) when key < khead do
+    Enum.reverse(rest, [{key, val} | list])
+  end
+
+  defp put_unique([{khead, vhead} | _] = list, key, val, _rest, original) when key == khead and val == vhead do
+    original
+  end
+
+  defp put_unique([head | tail], key, val, rest, original) do
+    put_unique(tail, key, val, [head | rest], original)
   end
 
   def empty?([]), do: true
