@@ -5,64 +5,70 @@ defmodule Dataflow.Utils.PriorityQueue do
   Should be replaced by something more efficient.
   """
 
-  def new, do: []
+  def new(comparator \\ &Kernel.<=/2), do: {[], comparator}
 
-  def put(queue, key, val), do: put(queue, key, val, [])
+  def put({queue, cmp}, key, val), do: {put(queue, key, val, [], cmp), cmp}
 
-  defp put([], key, val, rest) do
+  defp put([], key, val, rest, _cmp) do
     Enum.reverse(rest, [{key, val}])
   end
 
-  defp put([{khead, _} | _] = list, key, val, rest) when key <= khead do
-    Enum.reverse(rest, [{key, val} | list])
+  defp put([{khead, _} = head | tail] = list, key, val, rest, cmp) do
+    cond do
+      cmp.(key, khead) -> #key <= khead
+        Enum.reverse(rest, [{key, val} | list])
+      true ->
+        put(tail, key, val, [head | rest], cmp)
+    end
   end
 
-  defp put([head | tail], key, val, rest) do
-    put(tail, key, val, [head | rest])
-  end
+  def put_unique({queue, cmp}, key, val), do: {put_unique(queue, key, val, [], queue, cmp), cmp}
 
-  def put_unique(queue, key, val), do: put_unique(queue, key, val, [], queue)
-
-  defp put_unique([], key, val, rest, _original) do
+  defp put_unique([], key, val, rest, _original, _cmp) do
     Enum.reverse(rest, [{key, val}])
   end
 
-  # key is no longer equal to the next item, and we have not encountered an equal value, so place the item here.
-  defp put_unique([{khead, _} | _] = list, key, val, rest, _original) when key < khead do
-    Enum.reverse(rest, [{key, val} | list])
+  defp put_unique([{khead, vhead} = head | tail] = list, key, val, rest, original, cmp) do
+    cond do
+      cmp.(key, khead) && key != khead -> # key < khead
+        # key is no longer equal to the next item, and we have not encountered an equal value, so place the item here.
+        Enum.reverse(rest, [{key, val} | list])
+      key == khead && val == vhead ->
+        original
+      true ->
+        put_unique(tail, key, val, [head | rest], original, cmp)
+    end
   end
 
-  defp put_unique([{khead, vhead} | _] = list, key, val, _rest, original) when key == khead and val == vhead do
-    original
+  def empty?({[], _cmp}), do: true
+
+  def empty?({_, _cmp}), do: false
+
+  def size({queue, _cmp}), do: Enum.count(queue)
+
+  def peek({[], _cmp}), do: nil
+
+  def peek({[head | _], _cmp}), do: head
+
+  def take({[], cmp} = q), do: {nil, q}
+
+  def take({[head | list], cmp}), do: {head, {list, cmp}}
+
+  def take_before({list, cmp}, limit) do
+    {res, new_list} =
+      list
+      |> Enum.split_while(fn {key, el} -> key < limit end)
+
+    {res, {new_list, cmp}}
   end
 
-  defp put_unique([head | tail], key, val, rest, original) do
-    put_unique(tail, key, val, [head | rest], original)
-  end
+  def take_all({list, cmp}) do {list, new(cmp)} end
 
-  def empty?([]), do: true
+  def delete({queue, cmp}, fun) do
+    new_list =
+      queue
+      |> Enum.reject(fn {key, val} -> fun.(key, val) end)
 
-  def empty?(_), do: false
-
-  def size(queue), do: Enum.count(queue)
-
-  def peek([]), do: nil
-
-  def peek([head | _]), do: head
-
-  def take([]), do: nil
-
-  def take([head | list]), do: {head, list}
-
-  def take_before(list, limit) do
-    list
-    |> Enum.split_while(fn {key, el} -> key < limit end)
-  end
-
-  def take_all(list) do {list, new()} end
-
-  def delete(queue, fun) do
-    queue
-    |> Enum.reject(fn {key, val} -> fun.(key, val) end)
+    {new_list, cmp}
   end
 end

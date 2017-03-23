@@ -86,8 +86,8 @@ defmodule Dataflow.DirectRunner.TimingManager do
   def init(parent) do
     state = %State{
       parent: parent,
-      event_timers: PQ.new,
-      all_holds: PQ.new
+      event_timers: PQ.new(&Time.compare/2),
+      all_holds: PQ.new(&Time.compare/2)
     }
 
     {:ok, state}
@@ -112,7 +112,7 @@ defmodule Dataflow.DirectRunner.TimingManager do
 
   defp do_set_timer(namespace, time, :event_time, state) do
     # todo do we fire a timer now if the current time is past the timer time?
-    event_timers = PQ.put_unique state.event_timers, Time.raw(time), {namespace, time, :event_time}
+    event_timers = PQ.put_unique state.event_timers, time, {namespace, time, :event_time}
     {:reply, :ok, %{state | event_timers: event_timers}}
   end
 
@@ -121,7 +121,7 @@ defmodule Dataflow.DirectRunner.TimingManager do
   defp do_clear_timer(namespace, time, :event_time, state) do
     event_timers = PQ.delete state.event_timers,
       fn
-        _, {^namespace, ^time, :event_time} -> true
+        ^time, {^namespace, ^time, :event_time} -> true
         _, _ -> false
       end
 
@@ -191,7 +191,7 @@ defmodule Dataflow.DirectRunner.TimingManager do
       end
 
     # now insert the new hold
-    all_holds = PQ.put(all_holds, Time.raw(hold), {key, hold})
+    all_holds = PQ.put(all_holds, hold, {key, hold})
 
     {:reply, :ok, %{state | all_holds: all_holds}}
   end
