@@ -147,6 +147,7 @@ defmodule Dataflow.DirectRunner.TimingManager do
 
     # advance OWM as far as possible given current data holds
     # cast this message to the executor after the timer firings, in case it's a max_timestamp and we want to finish
+    old_owm = state.lowm
     {new_owm, state} = advance_owm(state)
 
 
@@ -172,7 +173,7 @@ defmodule Dataflow.DirectRunner.TimingManager do
     fired_timers = Enum.map timers, fn {_, val} -> val end
 
     unless Enum.empty?(fired_timers), do: TX.notify_of_timers(state.parent, fired_timers)
-    TX.notify_downstream_of_advanced_owm(state.parent, new_owm)
+    unless old_owm == new_owm, do: TX.notify_downstream_of_advanced_owm(state.parent, new_owm)
 
     # reply back with ok
     {:reply, :ok, state}
