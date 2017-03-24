@@ -4,7 +4,8 @@ defmodule Dataflow.DirectRunner.TransformEvaluator.WriteFile do
   alias Dataflow.Transforms.IO.WriteFile
 
   def init(%WriteFile{filename: filename}, _input, _tm) do
-   {:ok, File.open(filename, [:utf8, :write])}
+    {:ok, file} = File.open(filename, [:utf8, :write])
+    {:ok, file}
   end
 
   def consume_element({element, _timestamp, _windows}, file) do

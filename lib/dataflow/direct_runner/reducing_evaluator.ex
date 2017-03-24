@@ -203,6 +203,7 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
           |> Enum.unzip
 
         element_data = Map.new(element_data_list)
+        elements = Enum.concat(elements)
         {elements, element_data}
       else
         {[], element_data}
@@ -251,7 +252,7 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
     &&
     (
       {_, trigger_state, _, _, _} = state.windows[window]
-      not state.trigger_driver.closed?(trigger_state)
+      not state.trigger_driver.finished?(trigger_state)
     )
   end
 
@@ -384,15 +385,14 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
   defp process_elements(state, elements, mapping) do
     liwm = get_liwm state
     lowm = get_lowm state
-    {_, _, new_state} = Enum.reduce elements, {mapping, {liwm, lowm}, state}, &process_element/2
-    new_state
+    Enum.reduce elements, state, &process_element(&1, mapping, liwm, lowm, &2)
   end
 
-  defp process_element({{key, value}, timestamp, [], _}, _) do
+  defp process_element({{key, value}, timestamp, [], _}, _, _, _, _) do
     raise "An unwindowed element was encountered."
   end
 
-  defp process_element({{key, value}, timestamp, [window], el_opts} = element, {mapping, {liwm, lowm}, state}) do
+  defp process_element({{key, value}, timestamp, [window], el_opts} = element, mapping, liwm, lowm, state) do
     actual_window = get_window(mapping, window)
 
     window_state =
@@ -404,10 +404,13 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
     case window_state do
       :closed ->
         Logger.debug fn -> "Dropping element <#{inspect element}> due to closed window #{inspect actual_window}" end
-        {mapping, {liwm, lowm}, state}
-      {hold_state, trigger_state, _new_el_state, pane_state, reducer_state} ->
+        state
+      {hold_state, trigger_state, _new_el_state, pane_state, element_states} ->
+        old_reducer_state = element_states[key] || new_reducer_state(state)
         # process reducer
-        new_reducer_state = state.reducer.process_value(value, {key, actual_window, state.windowing, state.timing_manager}, el_opts, reducer_state)
+        new_reducer_state = state.reducer.process_value(value, {key, actual_window, state.windowing, state.timing_manager}, el_opts, old_reducer_state)
+
+        new_element_states = put_in(element_states[key], new_reducer_state)
 
         # process pane tracking
         new_new_el_state = true
@@ -426,18 +429,17 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
         # todo process timers
 
 
-        new_window_state = {new_hold_state, new_trigger_state, new_new_el_state, new_pane_state, new_reducer_state}
+        new_window_state = {new_hold_state, new_trigger_state, new_new_el_state, new_pane_state, new_element_states}
 
-        windows = Map.put state.windows, actual_window, new_window_state
-        {mapping, {liwm, lowm}, %{state | windows: windows}}
+        put_in(state.windows[actual_window], new_window_state)
     end
 
 
   end
 
-  defp process_element({{key, value}, timestamp, windows, opts}, state) do
+  defp process_element({{key, value}, timestamp, windows, opts}, mapping, liwm, lowm, state) do
     # there is more than one window, so unpack
-    Enum.reduce windows, state, fn window, st -> process_element {{key, value}, timestamp, [window], opts}, st end
+    Enum.reduce windows, state, fn window, st -> process_element {{key, value}, timestamp, [window], opts}, mapping, liwm, lowm, st end
   end
 
   defp get_window(%{}, window), do: window
@@ -451,9 +453,13 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
     trigger_state = state.trigger_driver.init(state.trigger, window, state.timing_manager)
     new_elements_state = false
     pane_state = :none
-    reducer_state = state.reducer.init(state.transform)
+    reducer_state = %{}
 
     {hold_state, trigger_state, new_elements_state, pane_state, reducer_state}
+  end
+
+  defp new_reducer_state(state) do
+    state.reducer.init(state.transform)
   end
 
   defp get_liwm(state) do
