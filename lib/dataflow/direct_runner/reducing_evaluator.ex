@@ -13,15 +13,13 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
   defmodule Reducer do
     @type t :: module
     @type state :: any
-    @type timer_op :: {:set, Time.timestamp, Time.domain} | {:cancel, Time.timestamp, Time.domain}
 
-    @type state_with_timers :: state | {state, [timer_op]}
-    @type context :: {key :: any, Window.t, WindowingStrategy.t, timers :: [any]}
+    @type context :: {key :: any, Window.t, WindowingStrategy.t, timing_manager :: pid}
 
-    @callback init(transform) :: state_with_timers when transform: Dataflow.PTransform.t
-    @callback process_value(value, context, state) :: state_with_timers when value: any
-    @callback merge_accumulators([state], context) :: state_with_timers
-    @callback emit(pane_info, context, state) :: {[element], state_with_timers} when element: any, pane_info: any
+    @callback init(transform) :: state when transform: Dataflow.PTransform.t
+    @callback process_value(value, context, el_attrs :: keyword, state) :: state when value: any
+    @callback merge_accumulators([state], context) :: state
+    @callback emit(pane_info, context, state) :: {[element], state} when element: any, pane_info: any
     @callback clear_accumulator(state) :: state
 
     def module_for(%Dataflow.Transforms.Core.GroupByKey{}), do: Dataflow.DirectRunner.Reducers.GBKReducer
@@ -50,7 +48,6 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
       trigger: Trigger.t,
       merging?: boolean,
       transform: Dataflow.PTransform.t,
-      watermark_state: WatermarkHoldManager.state,
       timing_manager: pid
     }
 
@@ -62,7 +59,6 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
       trigger: nil,
       merging?: true,
       transform: nil,
-      watermark_state: nil,
       timing_manager: nil
   end
 
@@ -92,9 +88,171 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
     {[], state}
   end
 
-  def update_input_watermark(watermark, state) do
-    # TODO
-    {[], state}
+  def fire_timers(timers, state) do
+    Enum.reduce timers, {[], state}, &fire_timer/2
+  end
+
+  defp fire_timer({{window, trigger_id}, time, domain} = timer, {elements_acc, state}) do
+    :event_time = domain
+
+    {elements, state} =
+      if timer_gc?(timer, state.windowing) do
+        {elements, state} =
+          if window_active_open?(window, state) do
+            {new_hold,elements, state} = on_trigger(window, true, timer_eow?(timer), true, state) # doesn't matter if we discard since we turn around and clear it, but may as well
+            :none = new_hold
+            {elements, state}
+          else
+            {[], state}
+          end
+
+        # New hold should be :none since we are done with the window
+
+        # clear all state for window since we won't see elements for it again
+        windows = Map.delete state.windows, window
+        {elements, %{state | windows: windows}}
+      else
+        {_, trigger_data, _, _, _} = state.windows[window]
+
+        {elements, state} =
+          if window_active_open?(window, state) && state.trigger_driver.should_fire?(trigger_data) do
+            emit(window, state)
+          else
+            {[], state}
+          end
+
+        if timer_eow?(timer) do
+          # If the window strategy trigger includes a watermark trigger then at this point
+          # there should be no data holds, either because we'd already cleared them on an
+          # earlier on_trigger, or because we just cleared them on the above emit.
+          # We could assert this but it is very expensive.
+
+          # Since we are processing an on-time firing we should schedule the garbage collection
+          # timer. (If getAllowedLateness is zero then the timer event will be considered a
+          # cleanup event and handled by the above).
+          # Note we must do this even if the trigger is finished so that we are sure to cleanup
+          # any final trigger finished bits.
+          # TODO check if this applies also with this implementation
+
+          gc_time = Window.gc_time(window, state.windowing)
+          TM.set_timer(state.timing_manager, {window, :cleanup}, gc_time, :event_time)
+        end
+
+        {elements, state}
+      end
+
+      {elements ++ elements_acc, state}
+  end
+
+  defp emit(window, state) do
+    # Inform the trigger of the transition to see if it is finished
+    {hold_data, trigger_data, new_elements?, last_pane, element_data} = state.windows[window]
+    new_trigger_state = state.trigger_driver.fired(trigger_data)
+    finished? = state.trigger_driver.finished?(new_trigger_state)
+
+    discard? = should_discard?(finished?, state.windowing)
+
+    {_new_hold, elements, state} = on_trigger(window, finished?, false, discard?, state)
+
+    # on trigger has cleared panes and discarded elements, if required
+
+    window_data =
+      if finished? do
+        # mark window as closed but don't delete it yet
+        :closed
+      else
+        {hold_data, new_trigger_state, new_elements?, last_pane, element_data}
+      end
+
+    state = put_in(state.windows[window], window_data)
+
+    {elements, state}
+  end
+
+  defp should_discard?(finished?, strategy)
+
+  defp should_discard?(true, _), do: true
+  defp should_discard?(_, :discarding), do: true
+  defp should_discard?(_, _), do: false
+
+  defp on_trigger(window, finished?, eow?, discard?, state) do
+    liwm = get_liwm state
+    lowm = get_lowm state
+
+    {hold_data, trigger_data, new_elements?, last_pane, element_data} = state.windows[window]
+
+    new_pane = PaneInfoTracker.get_next(window, last_pane, liwm, lowm, finished?)
+
+    {old_hold, new_hold, new_hold_state} =
+      WatermarkHoldManager.extract_and_release(hold_data, window, liwm, lowm, state.windowing, finished?)
+
+    TM.update_hold(state.timing_manager, window, new_hold)
+
+    out_tm = old_hold
+
+    empty? = not new_elements?
+
+    # todo assertions here about the correctness of new hold etc
+
+    # Only emit a pane if it has data or empty panes are observable
+    {elements, new_element_data} =
+      if should_emit?(empty?, finished?, new_pane.timing, state.windowing.closing_behavior) do
+        {elements, element_data_list} =
+          element_data
+          |> Enum.map(&trigger_reducer(&1, state, window, out_tm, new_pane, discard?))
+          |> Enum.unzip
+
+        element_data = Map.new(element_data_list)
+        {elements, element_data}
+      else
+        {[], element_data}
+      end
+
+    state = put_in(state.windows[window], {new_hold_state, trigger_data, false, new_pane, new_element_data})
+
+    {new_hold, elements, state}
+  end
+
+  defp trigger_reducer({key, reducer_state}, state, window, out_tm, pane, discard?) do
+    {elements, new_reducer_state} =
+      state.reducer.emit(pane, {key, window, state.windowing, state.timing_manager}, reducer_state)
+
+    new_reducer_state =
+      cond do
+        discard? -> state.reducer.clear_accumulator(new_reducer_state)
+        true -> new_reducer_state
+      end
+
+    elements =
+      elements
+      |> Enum.map(fn value -> {{key, value}, out_tm, [window], [pane_info: pane]} end)
+
+    {elements, {key, new_reducer_state}}
+  end
+
+  defp should_emit?(empty?, finished?, timing, closing_behavior)
+
+  defp should_emit?(false, _, _, _), do: true
+  defp should_emit?(_, _, :on_time, _), do: true
+  defp should_emit?(_, true, _, :fire_always), do: true
+  defp should_emit?(_, _, _, _), do: false
+
+  defp timer_eow?({{window, trigger_id}, time, domain}) do
+    domain == :event_time && time == Window.max_timestamp window
+  end
+
+  defp timer_gc?({{window, trigger_id}, time, domain}, strategy) do
+    gc_time = Window.gc_time(window, strategy)
+    Time.after_eq?(time, gc_time)
+  end
+
+  defp window_active_open?(window, state) do
+    not (state.windows[window] in [nil, :closed])
+    &&
+    (
+      {_, trigger_state, _, _, _} = state.windows[window]
+      not state.trigger_driver.closed?(trigger_state)
+    )
   end
 
   def finish(_state) do
@@ -217,7 +375,7 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
     end
 
     Enum.map(combined, fn
-      {key, {:"$merging", states}} -> {key, state.reducer.merge_accumulators(states, {key, window, state.windowing, []})}
+      {key, {:"$merging", states}} -> {key, state.reducer.merge_accumulators(states, {key, window, state.windowing, state.timing_manager})}
       key_state -> key_state
     end)
     |> Enum.into(%{})
@@ -249,7 +407,7 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
         {mapping, {liwm, lowm}, state}
       {hold_state, trigger_state, _new_el_state, pane_state, reducer_state} ->
         # process reducer
-        new_reducer_state = state.reducer.process_value(value, {key, actual_window, state.windowing, [], el_opts}, reducer_state)
+        new_reducer_state = state.reducer.process_value(value, {key, actual_window, state.windowing, state.timing_manager}, el_opts, reducer_state)
 
         # process pane tracking
         new_new_el_state = true

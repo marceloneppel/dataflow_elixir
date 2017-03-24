@@ -8,6 +8,7 @@ defmodule Dataflow.Window do
   """
 
   alias Dataflow.Utils.Time
+  alias Dataflow.Window.WindowingStrategy
   require Time
 
   @type global :: :global
@@ -24,6 +25,16 @@ defmodule Dataflow.Window do
 
   def max_timestamp(interval) do
     Time.latest_timestamp(interval)
+  end
+
+  @doc "Returns the garbage collection time of the window, given a `WindowingStrategy`."
+  @spec gc_time(window :: t, WindowingStrategy.t) :: Time.timestamp
+  def gc_time(:global, _), do: Time.max_timestamp
+
+  def gc_time(window, strategy) do
+    window
+    |> max_timestamp()
+    |> Time.add(strategy.allowed_lateness)
   end
 
   @doc "Returns the global window."

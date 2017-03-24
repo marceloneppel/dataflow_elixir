@@ -7,7 +7,7 @@ defmodule Dataflow.DirectRunner.Reducers.GBKReducer do
     []
   end
 
-  def process_value(value, _context, acc) do
+  def process_value(value, _context, _attrs, acc) do
     [value | acc]
   end
 
@@ -16,7 +16,7 @@ defmodule Dataflow.DirectRunner.Reducers.GBKReducer do
   end
 
   def emit(_pane_info, _context, acc) do
-    {acc, acc}
+    {[acc], acc}
   end
 
   def clear_accumulator(_acc) do

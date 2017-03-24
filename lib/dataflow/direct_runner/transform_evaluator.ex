@@ -18,8 +18,7 @@ defmodule Dataflow.DirectRunner.TransformEvaluator do
   }
 
   @type timer :: {
-    namespace :: atom | String.t,
-    id :: any,
+    namespace :: {Window.t, any},
     time :: Time.timestamp,
     domain :: :event_time
   }

@@ -27,8 +27,7 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator.WatermarkHoldManager do
     # try to match on failure. If the return value is not `:none`, the `with` block will return the (successful) result.
 
     with {:none, state} <- add_element_hold(state, timestamp, window, liwm, lowm, windowing_strategy),
-      {:none, state} <- add_eow_hold(state, window, liwm, lowm, windowing_strategy, false),
-      do: add_gc_hold(state, window, liwm, lowm, windowing_strategy, false)
+      do: add_eow_or_gc_hold(state, window, liwm, lowm, windowing_strategy, false)
   end
 
   @doc """
@@ -48,8 +47,7 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator.WatermarkHoldManager do
     state = %{state | extra_hold: :none}
 
 
-    with {:none, state} <- add_eow_hold(state, window, liwm, lowm, windowing_strategy, false),
-      do: add_gc_hold(state, window, liwm, lowm, windowing_strategy, false)
+    add_eow_or_gc_hold(state, window, liwm, lowm, windowing_strategy, false)
   end
 
   defp do_merge([], state, _window, _windowing_strategy) do
@@ -85,6 +83,34 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator.WatermarkHoldManager do
     end
   end
 
+  def extract_and_release(state, window, liwm, lowm, windowing_strategy, finished?) do
+    old_hold =
+      case min_hold(state.data_hold, state.extra_hold) do
+        :none ->
+          # If no hold (e.g. because all elements came in behind the output watermark), or the hold was for garbage
+          # collection, take the eow as the result.
+          Window.max_timestamp(window)
+        hold -> hold
+      end
+
+    state = clear_holds state
+
+    {new_hold, state} =
+      cond do
+        not finished? ->
+          # Only need to leave behind an eow/gc hold if future elements will be processed.
+          add_eow_or_gc_hold(state, window, liwm, lowm, windowing_strategy, true)
+        true -> {:none, state}
+      end
+
+    {old_hold, new_hold, state}
+  end
+
+  defp min_hold(:none, other), do: other
+  defp min_hold(other, :none), do: other
+  defp min_hold(hold1, hold2), do: Time.earlier(hold1, hold2)
+
+
   # Attempt to add an "element hold".
   #
   # Returns the timestamp at which the hold was added, or :none if no hold was added (all along with the modified state).
@@ -109,6 +135,11 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator.WatermarkHoldManager do
       true ->
         add_hold(state, :data, element_hold, windowing_strategy)
     end
+  end
+
+  defp add_eow_or_gc_hold(state, window, liwm, lowm, windowing_strategy, pane_empty?) do
+    with {:none, state} <- add_eow_hold(state, window, liwm, lowm, windowing_strategy, pane_empty?),
+          do: add_gc_hold(state, window, liwm, lowm, windowing_strategy, pane_empty?)
   end
 
   # Attempt to add an 'end-of-window hold'.
@@ -194,6 +225,10 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator.WatermarkHoldManager do
 
   defp update_hold(old, new, otfn) do
     otfn.combine(old, new)
+  end
+
+  defp clear_holds(state) do
+    %__MODULE__{}
   end
 
 end
