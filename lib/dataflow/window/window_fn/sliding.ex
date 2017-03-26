@@ -67,7 +67,9 @@ defmodule Dataflow.Window.WindowFn.Sliding do
         raise ArgumentError, message: "Attempted to get side input window for GlobalWindow from non-global WindowFn"
       end
 
-      assign(fun, Dataflow.Window.max_timestamp(window), nil, nil)
+      #assign(fun, Dataflow.Window.max_timestamp(window), nil, nil) |> List.first()
+      # todo check this
+      raise "Not implemented yet."
     end
   end
 

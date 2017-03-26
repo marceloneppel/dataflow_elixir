@@ -8,12 +8,11 @@ defmodule Dataflow.Utils.Time do
 
   import Kernel, except: [max: 2, min: 2]
 
-  @type type :: :timestamp | :duration
-  @opaque time :: non_neg_integer | :max | :min
-  @type t :: {type, time}
+  @type time :: non_neg_integer | :max | :min
   @type timestamp :: {:timestamp, time}
   @type duration :: {:duration, time}
   @type interval :: {:interval, time, time}
+  @type t :: duration | timestamp
   @type unit :: :seconds | :milliseconds | :microseconds
   @type domain :: :event_time | :processing_time
 
@@ -225,7 +224,7 @@ defmodule Dataflow.Utils.Time do
   """
   @spec contains?(interval, interval) :: boolean
   def contains?({:interval, tstart1, tend1}, {:interval, tstart2, tend2}) do
-    before_eq?(tstart1, tstart2) && after_eq?(tend1, tend2)
+    before_eq?({:timestamp, tstart1}, {:timestamp, tstart2}) && after_eq?({:timestamp, tend1}, {:timestamp, tend2})
   end
 
   @doc """
@@ -233,7 +232,7 @@ defmodule Dataflow.Utils.Time do
   """
   @spec disjoint?(interval, interval) :: boolean
   def disjoint?({:interval, tstart1, tend1}, {:interval, tstart2, tend2}) do
-    before_eq?(tend1, tstart2) || before_eq?(tend2, tstart1)
+    before_eq?({:timestamp, tend1}, {:timestamp, tstart2}) || before_eq?({:timestamp, tend2}, {:timestamp, tstart1})
   end
 
   @doc """
@@ -247,7 +246,13 @@ defmodule Dataflow.Utils.Time do
   """
   @spec span(interval, interval) :: interval
   def span({:interval, tstart1, tend1}, {:interval, tstart2, tend2}) do
-    {:interval, Kernel.min(tstart1, tstart2), Kernel.max(tend1, tend2)}
+    {:timestamp, tstart} = min({:timestamp, tstart1}, {:timestamp, tstart2})
+    {:timestamp, tend} = max({:timestamp, tend1}, {:timestamp, tend2})
+    if tstart == :min && tend == :max do
+      :global
+    else
+      {:interval, tstart, tend}
+    end
   end
 
 

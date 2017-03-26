@@ -59,7 +59,7 @@ defmodule Dataflow.Window.WindowFn.Fixed do
         raise ArgumentError, message: "Attempted to get side input window for GlobalWindow from non-global WindowFn"
       end
 
-      assign(fun, Dataflow.Window.max_timestamp(window), nil, nil)
+      assign(fun, Dataflow.Window.max_timestamp(window), nil, nil) |> List.first()
     end
   end
 end
