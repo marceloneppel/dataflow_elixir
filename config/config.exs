@@ -29,6 +29,4 @@ use Mix.Config
 #
 #     import_config "#{Mix.env}.exs"
 
-config :priority_queue, native: true
-
 import_config "config.secret.exs"

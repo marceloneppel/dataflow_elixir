@@ -14,7 +14,7 @@ autocomplete = Autocompleter.start_link
 p = Pipeline.new runner: DirectRunner
 
 p
-~> IO.read_stream(ExTwitter.stream_sample())
+~> IO.read_stream(fn -> ExTwitter.stream_filter(track: "tech,technology,Apple,Google,Twitter,Facebook,Microsoft,iPhone,Mac,Android,computers,CompSci", language: "en") end)
 ~> Windowing.with_timestamps(fn tweet -> parse_as_timestamp(tweet.created_at) end, delay_watermark: {10, :seconds, :event_time})
 ~> Windowing.window_into(:sliding, size: {5, :minutes}, period: {2, :minutes})
 ~> Core.flat_map(fn tweet ->

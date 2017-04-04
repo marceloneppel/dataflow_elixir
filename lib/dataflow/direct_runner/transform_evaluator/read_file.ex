@@ -36,7 +36,7 @@ defmodule Dataflow.DirectRunner.TransformEvaluator.ReadFile do
     end
   end
 
-  def finish(file) do
+  def finish({file, timing_manager}) do
     File.close file
   end
 end

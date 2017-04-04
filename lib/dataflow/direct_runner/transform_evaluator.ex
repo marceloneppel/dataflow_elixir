@@ -35,13 +35,16 @@ defmodule Dataflow.DirectRunner.TransformEvaluator do
 
   @callback fire_timers([timer], state) :: {[element], state}
 
+  @callback handle_async(message :: any, state) :: {[element], state}
+
   @callback finish(state) :: :ok | {:error, any}
 
   @optional_callbacks \
     produce_elements: 2,
     transform_element: 2, transform_elements: 2,
     consume_element: 2, consume_elements: 2,
-    fire_timers: 2
+    fire_timers: 2,
+    handle_async: 2
 
 
   defmacro __using__(opts) do

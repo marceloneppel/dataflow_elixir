@@ -43,7 +43,9 @@ defmodule Dataflow.DirectRunner.TransformExecutor do
     GenStage.cast pid, {:advance_owm, new_wm}
   end
 
-
+  def notify_evaluator(pid, message) do
+    GenStage.cast pid, {:evaluator, message}
+  end
 
 
   #TODO change this once the tree is dynamic
