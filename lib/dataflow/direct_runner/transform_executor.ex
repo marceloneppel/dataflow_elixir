@@ -146,6 +146,14 @@ defmodule Dataflow.DirectRunner.TransformExecutor do
     {:noreply, [], ex_state}
   end
 
+  def handle_cast({:evaluator, message}, %InternalState{callback_module: module, evaluator_state: state} = ex_state) do
+    {elements, new_state} = module.handle_async(message, state)
+
+    Logger.debug fn -> "#{transform_label(ex_state.applied_transform)}: I received an evaluator async message and on processing it produced #{Enum.count elements} elements." end
+
+    {:noreply, elements, %{ex_state | evaluator_state: new_state}}
+  end
+
   defp transform_label(at) do
     "<#{Utils.make_transform_label at, newline: false}>"
   end
