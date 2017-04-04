@@ -32,7 +32,6 @@ defmodule Dataflow.Mixfile do
       {:credo, "~> 0.5", only: [:dev, :test]},
       {:gen_stage, "~> 0.11"},
       {:apex, "~>0.7.0"},
-      {:priority_queue, "~>1.0"},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:extwitter, "~> 0.8"}
     ]
