@@ -68,6 +68,7 @@ defmodule Dataflow.DirectRunner.TransformEvaluator do
 
   def module_for(%Core.ParDo{}), do: TransformEvaluator.ParDo
   def module_for(%Core.GroupByKey{}), do: ReducingEvaluator
+  def module_for(%Core.CombinePerKey{}), do: ReducingEvaluator
 
   def module_for(%IO.ReadFile{}), do: TransformEvaluator.ReadFile
   def module_for(%IO.WriteFile{}), do: TransformEvaluator.WriteFile

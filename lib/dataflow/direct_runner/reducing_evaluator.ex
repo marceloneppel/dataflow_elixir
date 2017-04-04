@@ -23,6 +23,7 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator do
     @callback clear_accumulator(state) :: state
 
     def module_for(%Dataflow.Transforms.Core.GroupByKey{}), do: Dataflow.DirectRunner.Reducers.GBKReducer
+    def module_for(%Dataflow.Transforms.Core.CombinePerKey{}), do: Dataflow.DirectRunner.Reducers.CombineReducer
 
     def module_for(%{__struct__: module}), do: raise "No reducer available for transform #{module}"
   end

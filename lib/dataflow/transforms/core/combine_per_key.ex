@@ -8,12 +8,10 @@ defmodule Dataflow.Transforms.Core.CombinePerKey do
   defimpl PTransform.Callable do
     alias Dataflow.Transforms.Core.CombinePerKey
 
-    def expand(%CombinePerKey{combine_fn: fun}, input) do
+    def expand(%CombinePerKey{}, input) do
       use Dataflow.Transforms.Core.{GroupByKey, CombineValues}
       #todo labels
-      input
-      ~> group_by_key()
-      ~> "Combine" -- combine_values(fun)
+      fresh_pvalue input, from: input
     end
   end
 

@@ -29,9 +29,9 @@ defmodule Dataflow.Transforms.Core.CombineValues do
 
           combined =
             fun
-            |> CombineFn.create_accumulator
-            |> CombineFn.add_inputs(enum)
-            |> CombineFn.extract_output
+            |> CombineFn.p_create_accumulator
+            |> CombineFn.p_add_inputs(enum)
+            |> CombineFn.p_extract_output
 
           {key, combined}
         end

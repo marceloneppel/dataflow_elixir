@@ -51,26 +51,35 @@ defmodule Dataflow.Transforms.Fns.CombineFn do
 
    #todo from single callable?
 
-   # These operate in tuples so that they're easily pipeable.
 
-   def create_accumulator(%__MODULE__{create_accumulator: ca} = function) do
-     {function, ca.()}
+   def create_accumulator(%__MODULE__{create_accumulator: ca}) do
+     ca.()
    end
 
-   def add_input({%__MODULE__{add_input: ai} = function, acc}, input) do
-     {function, ai.(acc, input)}
+   def add_input(%__MODULE__{add_input: ai}, acc, input) do
+     ai.(acc, input)
    end
 
    #todo make this only be the default impl?
-   def add_inputs({%__MODULE__{} = function, acc}, inputs) do
-     Enum.reduce(inputs, acc, fn el, acc -> add_input {function, acc}, el end)
+   def add_inputs(%__MODULE__{} = function, acc, inputs) do
+     Enum.reduce(inputs, acc, fn el, acc -> add_input function, acc, el end)
    end
 
-   def merge_accumulators({%__MODULE__{merge_accumulators: ma} = function, acc1}, acc2) do
-     {function, ma.(acc1, acc2)}
+   def merge_accumulators(%__MODULE__{merge_accumulators: ma}, acc1, acc2) do
+     ma.(acc1, acc2)
    end
 
-   def extract_output({%__MODULE__{extract_output: eo}, acc}) do
+   def extract_output(%__MODULE__{extract_output: eo}, acc) do
      eo.(acc)
    end
+
+   # Pipeable tuple variants
+
+   def p_create_accumulator(function), do: {function, create_accumulator(function)}
+   def p_add_input({function, acc}, input), do: {function, add_input(function, acc, input)}
+   def p_add_inputs({function, acc}, inputs), do: {function, add_inputs(function, acc, inputs)}
+   def p_merge_accumulators({function, acc1}, {function, acc2}), do: {function, merge_accumulators(function, acc1, acc2)}
+   def p_extract_output({function, acc}), do: extract_output(function, acc)
+   def p_clear_accumulator({function, _acc}), do: p_create_accumulator(function)
+
 end
