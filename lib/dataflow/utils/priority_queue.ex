@@ -57,12 +57,16 @@ defmodule Dataflow.Utils.PriorityQueue do
   def take_before({list, cmp}, limit) do
     {res, new_list} =
       list
-      |> Enum.split_while(fn {key, el} -> key < limit end)
+      |> Enum.split_while(fn {key, el} -> le(cmp, key, limit) end)
 
     {res, {new_list, cmp}}
   end
 
   def take_all({list, cmp}) do {list, new(cmp)} end
+
+  def trim({list, cmp}, num) do
+    {Enum.take(list, num), cmp}
+  end
 
   def delete({queue, cmp}, fun) do
     new_list =
@@ -71,4 +75,6 @@ defmodule Dataflow.Utils.PriorityQueue do
 
     {new_list, cmp}
   end
+
+  defp le(cmp, el1, el2), do: cmp.(el1, el2) && el1 != el2
 end

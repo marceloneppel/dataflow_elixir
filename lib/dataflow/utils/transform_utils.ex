@@ -8,7 +8,7 @@ defmodule Dataflow.Utils.TransformUtils do
 
   defmacro export_transforms(funs_to_modules) when is_map(funs_to_modules) do
     Enum.flat_map funs_to_modules, fn {fun, {module_name, ar}} ->
-      arities = arity_list(ar)
+      arities = List.wrap(ar)
       Enum.map arities, fn arity -> make_delegate(fun, module_name, arity) end
     end
   end
@@ -16,7 +16,7 @@ defmodule Dataflow.Utils.TransformUtils do
   defmacro export_transforms(funs_to_modules) when is_list(funs_to_modules) do
     unless Keyword.keyword?(funs_to_modules), do: raise "Must pass arities"
     Enum.flat_map funs_to_modules, fn {module_name, ar} ->
-      arities = arity_list(ar)
+      arities = List.wrap(ar)
       module_name = Macro.expand(module_name, __ENV__)
       fun =
         module_name
@@ -39,7 +39,4 @@ defmodule Dataflow.Utils.TransformUtils do
       defdelegate unquote(fun)(unquote_splicing(args)), to: module, as: :new
     end
   end
-
-  defp arity_list(arities) when is_list(arities), do: arities
-  defp arity_list(arity) when is_integer(arity), do: [arity]
 end
