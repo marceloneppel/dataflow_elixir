@@ -18,3 +18,5 @@ erl_crash.dump
 
 # IDEA files
 .idea
+
+/config/*.secret.exs

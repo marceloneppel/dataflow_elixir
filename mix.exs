@@ -14,7 +14,7 @@ defmodule Dataflow.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger]]
+    [extra_applications: [:logger]]
   end
 
   # Dependencies can be Hex packages:
@@ -34,7 +34,7 @@ defmodule Dataflow.Mixfile do
       {:apex, "~>0.7.0"},
       {:priority_queue, "~>1.0"},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
-      {:twittex, "~> 0.2"}
+      {:extwitter, "~> 0.8"}
     ]
   end
 end
