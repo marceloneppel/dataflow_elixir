@@ -1,20 +1,20 @@
 defmodule Dataflow.Transforms.Core.CombineValues do
-  use Dataflow.PTransform, make_fun: [combine_values: 1]
+  use Dataflow.PTransform
 
   defstruct combine_fn: nil #todo tags? enforce keys
   alias Dataflow.Transforms.Fns.CombineFn
+  alias Dataflow.Transforms.Core
 
-  def combine_values(fun), do: %__MODULE__{combine_fn: fun}
+  def new(fun), do: %__MODULE__{combine_fn: fun}
 
   defimpl PTransform.Callable do
     alias Dataflow.Transforms.Core.CombineValues
 
     def expand(%CombineValues{combine_fn: %CombineFn{} = fun}, input) do
-      use Dataflow.Transforms.Core.ParDo
 
       #todo typings
       input
-      ~> par_do(combine_do_fn(fun))
+      ~> Core.par_do(combine_do_fn(fun))
     end
 
 

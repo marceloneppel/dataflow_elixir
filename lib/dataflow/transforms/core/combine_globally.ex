@@ -1,9 +1,11 @@
 defmodule Dataflow.Transforms.Core.CombineGlobally do
-  use Dataflow.PTransform, make_fun: [combine_globally: 1]
+  use Dataflow.PTransform
 
   defstruct combine_fn: nil #todo tags? enforce keys
 
-  def combine_globally(combine_fn) do
+  alias Dataflow.Transforms.Core
+
+  def new(combine_fn) do
     %__MODULE__{combine_fn: combine_fn}
   end
 
@@ -12,14 +14,12 @@ defmodule Dataflow.Transforms.Core.CombineGlobally do
 
     def expand(%CombineGlobally{combine_fn: fun}, input) do
         #todo defaults, as_view
-        use Dataflow.Transforms.Core.CombinePerKey
-        import Dataflow.Transforms.Core, only: [map: 1]
 
         combined =
         input
         #~> "KeyWithVoid" -- add_input_types(...)
-        ~> "CombinePerKey" -- combine_per_key(fun)
-        ~> "UnKey" -- map(fn {_k, v} -> v end)
+        ~> "CombinePerKey" -- Core.combine_per_key(fun)
+        ~> "UnKey" -- Core.map(fn {_k, v} -> v end)
         combined
       end
   end

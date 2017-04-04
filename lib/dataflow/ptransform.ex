@@ -9,32 +9,11 @@ defmodule Dataflow.PTransform do
   require NestedInput
 
   defmacro __using__(opts) do
-    code =
-      [
-        quote do
-          alias unquote(__MODULE__)
-          import unquote(__MODULE__), only: [fresh_pvalue: 1, fresh_pvalue: 2]
-          use Dataflow
-        end
-      ]
-
-    using =
-      case Keyword.get opts, :make_fun do
-        nil -> []
-        funs when is_list(funs) ->
-          [
-            quote do
-              defmacro __using__(_opts) do
-                funs = unquote(funs)
-                quote do
-                  import unquote(__MODULE__), only: unquote(funs)
-                end
-              end
-            end
-          ]
-      end
-
-    quote do unquote_splicing(code ++ using) end
+    quote do
+      alias unquote(__MODULE__)
+      import unquote(__MODULE__), only: [fresh_pvalue: 1, fresh_pvalue: 2]
+      use Dataflow
+    end
   end
 
   def fresh_pvalue(%NestedInput{state: state}, opts \\ []) do

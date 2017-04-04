@@ -1,11 +1,12 @@
 defmodule Dataflow.Transforms.Core do
   alias Dataflow.PTransform
+  use Dataflow.Utils.TransformUtils
 
   def flat_map(fun) when is_function(fun) do
    #todo labels?
    fun
    |> Dataflow.Transforms.Fns.DoFn.from_function
-   |> Dataflow.Transforms.Core.ParDo.par_do
+   |> Dataflow.Transforms.Core.par_do
   end
 
   def map(fun) when is_function(fun) do
@@ -24,4 +25,12 @@ defmodule Dataflow.Transforms.Core do
 
     flat_map(wrapper)
   end
+
+  export_transforms [
+    CombineGlobally: 1,
+    CombinePerKey: 1,
+    CombineValues: 1,
+    GroupByKey: 0,
+    ParDo: 1
+  ]
 end

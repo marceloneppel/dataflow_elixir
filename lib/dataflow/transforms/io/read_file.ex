@@ -5,16 +5,16 @@ defmodule Dataflow.Transforms.IO.ReadFile do
   *Testing only* pending the implementation of the source/sink API.
   """
 
-  use Dataflow.PTransform, make_fun: [read_file: 1]
+  use Dataflow.PTransform
 
   defstruct filename: nil
 
-  def read_file(filename), do: %__MODULE__{filename: filename}
+  def new(filename), do: %__MODULE__{filename: filename}
 
   defimpl PTransform.Callable do
     alias Dataflow.Transforms.IO.ReadFile
 
-    def expand(%ReadFile{filename: fname}, input) do
+    def expand(%ReadFile{}, input) do
       #TODO: assert input is a dummy?
       fresh_pvalue input
     end

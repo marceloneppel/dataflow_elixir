@@ -1,9 +1,9 @@
 defmodule Dataflow.Transforms.Core.ParDo do
-  use Dataflow.PTransform, make_fun: [par_do: 1]
+  use Dataflow.PTransform
 
   defstruct do_fn: nil #todo side output tags? enforce keys?
 
-  def par_do(fun), do: %__MODULE__{do_fn: fun}
+  def new(fun), do: %__MODULE__{do_fn: fun}
 
   defimpl PTransform.Callable do
     #TODO with_outputs
