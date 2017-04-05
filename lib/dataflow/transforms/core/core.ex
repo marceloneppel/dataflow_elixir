@@ -18,6 +18,15 @@ defmodule Dataflow.Transforms.Core do
     flat_map(wrapper)
   end
 
+  def each(fun) when is_function(fun) do
+    wrapper = fn x ->
+      fun.(x)
+      x
+    end
+
+    map(wrapper)
+  end
+
   def filter(fun) when is_function(fun) do
     #todo typings, labelling
 

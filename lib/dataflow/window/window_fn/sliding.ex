@@ -25,6 +25,20 @@ defmodule Dataflow.Window.WindowFn.Sliding do
     period: Time.duration
   }
 
+  def from_opts(opts) do
+    {size_amt, size_unit} = Keyword.fetch!(opts, :size)
+    {period_amt, period_unit} = Keyword.fetch!(opts, :period)
+    size = Time.duration(size_amt, size_unit)
+    period = Time.duration(period_amt, period_unit)
+    offset =
+      case opts[:offset] do
+        nil -> Time.duration(0)
+        {amt, unit} -> Time.duration(amt, unit)
+      end
+
+    new(size, period, offset)
+  end
+
   @spec new(size :: Time.duration, period :: Time.duration, offset :: Time.duration) :: t
   def new(size, period, offset \\ Time.duration(0)) do
     unless Time.greater_than_eq?(offset, Time.duration(0)) && Time.less_than?(offset, size) do

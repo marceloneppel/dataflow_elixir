@@ -25,6 +25,30 @@ defmodule Dataflow.Window.WindowFn do
     end
   end
 
+  alias Dataflow.Window.WindowFn.{Fixed, Global, Sessions, Sliding}
+
+  def parse(window) when is_atom(window), do: parse({window, []})
+  def parse({:sliding, opts}) do
+    Sliding.from_opts(opts)
+  end
+
+  def parse({:global, _opts}) do
+    Global.new()
+  end
+
+  def parse({:sessions, opts}) do
+    Sessions.from_opts(opts)
+  end
+
+  def parse({:fixed, opts}) do
+    Fixed.from_opts(opts)
+  end
+
+  def parse(%{__struct__: mod} = window) do
+    Protocol.assert_impl!(mod, Callable)
+    window
+  end
+
   defprotocol Callable do
     alias Dataflow.{Utils, Window}
 

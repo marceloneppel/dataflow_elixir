@@ -25,6 +25,18 @@ defmodule Dataflow.Window.WindowFn.Fixed do
     offset: Time.duration
   }
 
+  def from_opts(opts) do
+    {size_amt, size_unit} = Keyword.fetch!(opts, :size)
+    size = Time.duration(size_amt, size_unit)
+    offset =
+      case opts[:offset] do
+        nil -> Time.duration(0)
+        {amt, unit} -> Time.duration(amt, unit)
+      end
+
+    new(size, offset)
+  end
+
   def new(size, offset \\ Time.duration(0)) do
     unless Time.greater_than_eq?(offset, Time.duration(0)) && Time.less_than?(offset, size) do
       raise ArgumentError, "Fixed windows must have 0 <= offset < size"

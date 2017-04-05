@@ -16,7 +16,7 @@ p = Pipeline.new runner: DirectRunner
 p
 ~> IO.read_stream(fn -> ExTwitter.stream_filter(track: "tech,technology,Apple,Google,Twitter,Facebook,Microsoft,iPhone,Mac,Android,computers,CompSci", language: "en") end)
 ~> Windowing.with_timestamps(fn tweet -> parse_as_timestamp(tweet.created_at) end, delay_watermark: {10, :seconds, :event_time})
-~> Windowing.window_into(:sliding, size: {5, :minutes}, period: {2, :minutes})
+~> Windowing.window(into: {:sliding, size: {5, :minutes}, period: {2, :minutes}})
 ~> Core.flat_map(fn tweet ->
   case tweet.entities[:hashtags] do
     nil -> []
@@ -33,4 +33,5 @@ p
  end)
 ~> Aggregation.top_per_key(compare: fn {_prefix, {_tag, count1}}, {_prefix, {_tag, count2}} -> count1 <= count2 end)
 ~> Core.map(fn {prefix, tcs} -> Enum.map tcs, fn {tag, _count} -> tag end end)
-~> IO.send_to_process(autocomplete, mode: :batch)
+~> Core.each(fn x -> IO.puts "#{inspect x}" end)
+#~> IO.send_to_process(autocomplete, mode: :batch)

@@ -20,6 +20,13 @@ defmodule Dataflow.Window.WindowFn.Sessions do
     gap_size: Time.duration
   }
 
+  def from_opts(opts) do
+    {size_amt, size_unit} = Keyword.fetch!(opts, :gap_size)
+    size = Time.duration(size_amt, size_unit)
+
+    new(size)
+  end
+
   @spec new(gap_size :: Time.duration) :: t
   def new(gap_size) do
     unless Time.greater_than?(gap_size, Time.duration(0)) do

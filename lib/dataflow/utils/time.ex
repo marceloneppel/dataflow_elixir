@@ -210,6 +210,9 @@ defmodule Dataflow.Utils.Time do
   defp to_microseconds(i, :microseconds), do: i
   defp to_microseconds(i, :milliseconds), do: i * 1_000
   defp to_microseconds(i, :seconds), do: i * 1_000_000
+  defp to_microseconds(i, :minutes), do: i * 1_000_000 * 60
+  defp to_microseconds(i, :hours), do: i * 1_000_000 * 60 * 60
+  defp to_microseconds(i, :days), do: i * 1_000_000 * 60 * 60 * 24
 
   @doc """
   Returns the latest timestamp which can be included in an interval, i.e. the _inclusive_ end of the interval.

@@ -11,7 +11,7 @@ defmodule Dataflow.PTransform do
   defmacro __using__(opts) do
     quote do
       alias unquote(__MODULE__)
-      import unquote(__MODULE__), only: [fresh_pvalue: 1, fresh_pvalue: 2]
+      import unquote(__MODULE__), only: [fresh_pvalue: 1, fresh_pvalue: 2, get_value: 1]
       use Dataflow
     end
   end
@@ -29,8 +29,16 @@ defmodule Dataflow.PTransform do
         type: opts[:type] || :collection
       }
 
+    value =
+      case opts[:windowing_strategy] do
+        nil -> value
+        strategy -> %{value | windowing_strategy: strategy}
+      end
+
     %NestedInput{state: state, value: value}
   end
+
+  def get_value(input), do: get_from_value(input)
 
   defp get_from_value(%PValue{} = value), do: value
   defp get_from_value(%NestedInput{value: value}), do: value

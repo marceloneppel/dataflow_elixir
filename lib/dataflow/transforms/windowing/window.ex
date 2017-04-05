@@ -1,4 +1,4 @@
-defmodule Dataflow.Transforms.Windowing.WindowInto do
+defmodule Dataflow.Transforms.Windowing.Window do
   @moduledoc """
   A `Window` logically divides up or groups the elements of a `PCollection` into finite windows according to a
   `WindowFn`. The output of the `Window` transform contains the same elements as its input, but they have been logically
@@ -76,5 +76,55 @@ defmodule Dataflow.Transforms.Windowing.WindowInto do
   See `Trigger` for details on the available triggers.
   """
 
+  use Dataflow.PTransform
+
+  alias Dataflow.Window.WindowFn
+  alias Dataflow.Trigger
+  alias Dataflow.Window.WindowingStrategy
+
+  defstruct [:fields]
+
+  def new(opts \\ []) do
+    unless Keyword.has_key?(opts, :into), do: raise "Must specify the `into:` parameter for windowing."
+    into = Keyword.fetch!(opts, :into)
+    window_fn = WindowFn.parse(into)
+
+    fields = %{
+      window_fn: window_fn
+    }
+
+    # triggering
+    # discarding?
+    # allowed lateness
+    # output time Fn
+
+    %__MODULE__{fields: fields}
+  end
+
+  defimpl PTransform.Callable do
+    alias Dataflow.Transforms.Windowing.Window, as: WinXform
+    alias Dataflow.Transforms.Core
+    alias Dataflow.Transforms.Fns.DoFn
+    alias Dataflow.Window.WindowFn.Callable, as: WindowFnC
+
+    def expand(%WinXform{fields: fields}, input) do
+      current_value = get_value(input)
+      current_strategy = current_value.windowing_strategy
+
+      strategy = struct!(current_strategy, fields)
+
+      fresh_pvalue input, from: input, windowing_strategy: strategy
+      ~> "PerformWindowing" -- Core.par_do(windowing_dofn(strategy.window_fn))
+    end
+
+    defp windowing_dofn(window_fn) do
+      %DoFn{
+        process: fn {el, timestamp, windows, opts} ->
+          new_windows = WindowFnC.assign(window_fn, timestamp, el, windows)
+          {el, timestamp, new_windows, opts} # todo check if this is totally valid
+        end
+      }
+    end
+  end
 
 end
