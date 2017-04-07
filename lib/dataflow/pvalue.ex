@@ -21,7 +21,6 @@ defmodule Dataflow.PValue do
     label: "",
     producer: nil,
     type: :collection,
-    bounded: true,
     windowing_strategy: Dataflow.Window.WindowingStrategy.default_strategy
   #TODO enforce keys
 

@@ -4,7 +4,10 @@ defmodule Dataflow.Transforms.Aggregation.TopPerKey do
 
   # TODO reconsider whether to allow extracting the comparison key and values separately
 
-  def new(size, comparator \\ &<=/2), do: %__MODULE__{comparator: comparator, size: size}
+  def new(size, opts \\ []) do
+    comparator = opts[:compare] || &<=/2
+    %__MODULE__{comparator: comparator, size: size}
+  end
 
   defimpl PTransform.Callable do
     alias Dataflow.Transforms.Fns.CombineFn

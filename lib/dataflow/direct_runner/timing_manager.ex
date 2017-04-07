@@ -110,9 +110,10 @@ defmodule Dataflow.DirectRunner.TimingManager do
       all_holds: PQ.new(&Time.compare/2)
     }
 
+
     state =
-      if opts[:manage_owm_lowm] do
-        state = %{state | manage_owm_lowm?: true, desired_lowm: Time.min_timestamp}
+      if opts[:manage_own_lowm] do
+        %{state | manage_own_lowm?: true, desired_lowm: Time.min_timestamp}
       else
         state
       end
@@ -207,7 +208,7 @@ defmodule Dataflow.DirectRunner.TimingManager do
         timestamp ->
           {timers, event_timers} =
             state.event_timers
-            |> PQ.take_before(Time.raw(timestamp))
+            |> PQ.take_before(timestamp)
 
           {timers, %{state | event_timers: event_timers}}
       end

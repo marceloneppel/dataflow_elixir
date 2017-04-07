@@ -8,14 +8,9 @@ defmodule Dataflow.DirectRunner.TransformEvaluator.WriteFile do
     {:ok, file}
   end
 
-  def consume_element({element, _timestamp, _windows, _opts}, file) do
-    IO.write(file, [element, "\n"])
-    file
-  end
-
-  def consume_elements(elements, file) do
+  def transform_elements(elements, file) do
     for {el, _, _, _} <- elements, do: IO.write(file, [el, "\n"])
-    file
+    {[], file}
   end
 
   def finish(file) do

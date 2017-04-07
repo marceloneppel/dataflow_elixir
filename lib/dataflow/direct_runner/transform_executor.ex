@@ -98,7 +98,7 @@ defmodule Dataflow.DirectRunner.TransformExecutor do
 
     {:ok, timing_manager} = TM.start_linked(tm_opts)
 
-    Logger.debug "Options: #{inspect opts}"
+    Logger.debug "Options: #{inspect opts}\nTiming opts: #{inspect tm_opts}"
 
     {:ok, evaluator_state} = evaluator_module.init(transform, input, timing_manager)
 
@@ -123,20 +123,13 @@ defmodule Dataflow.DirectRunner.TransformExecutor do
     {:noreply, results, new_int_state}
   end
 
-  def handle_events(elements, _from, %InternalState{mode: :producer_consumer, callback_module: module, evaluator_state: state} = ex_state) do
+  def handle_events(elements, _from, %InternalState{mode: mode, callback_module: module, evaluator_state: state} = ex_state) do
     {results, new_state} = module.transform_elements(elements, state)
-    {:noreply, results, %{ex_state | evaluator_state: new_state}}
-  end
-
-  def handle_events(elements, _from, %InternalState{mode: :consumer, callback_module: module, evaluator_state: state} = ex_state) do
-    new_state = module.consume_elements(elements, state)
-    {:noreply, [], %{ex_state | evaluator_state: new_state}}
+    {:noreply, maybe_results(results, ex_state), %{ex_state | evaluator_state: new_state}}
   end
 
   def handle_info({_from, {:watermark, new_watermark}}, ex_state) do
     TM.advance_input_watermark(ex_state.timing_manager, new_watermark)
-
-    Logger.debug fn -> "#{transform_label(ex_state.applied_transform)}: I received an input watermark of #{inspect new_watermark}." end
 
     {:noreply, [], ex_state}
   end
@@ -146,12 +139,12 @@ defmodule Dataflow.DirectRunner.TransformExecutor do
 
     Logger.debug fn -> "#{transform_label(ex_state.applied_transform)}: I received timers: #{inspect timers} and on firing they produced #{Enum.count elements} elements." end
 
-    {:noreply, elements, %{ex_state | evaluator_state: new_state}}
+    {:noreply, maybe_results(elements, ex_state), %{ex_state | evaluator_state: new_state}}
   end
 
-  def handle_cast({:advance_owm, new_owm}, ex_state) do
-    Logger.debug fn -> "#{transform_label(ex_state.applied_transform)}: advancing output watermark to #{inspect new_owm}" end
-    GenStage.async_notify(self(), {:watermark, new_owm})
+  def handle_cast({:advance_owm, new_owm}, %InternalState{mode: mode} = ex_state) do
+#    Logger.debug fn -> "#{transform_label(ex_state.applied_transform)}: advancing output watermark to #{inspect new_owm}" end
+    unless mode == :consumer, do: GenStage.async_notify(self(), {:watermark, new_owm})
     {:noreply, [], ex_state}
   end
 
@@ -160,10 +153,13 @@ defmodule Dataflow.DirectRunner.TransformExecutor do
 
     Logger.debug fn -> "#{transform_label(ex_state.applied_transform)}: I received an evaluator async message and on processing it produced #{Enum.count elements} elements." end
 
-    {:noreply, elements, %{ex_state | evaluator_state: new_state}}
+    {:noreply, maybe_results(elements, ex_state), %{ex_state | evaluator_state: new_state}}
   end
 
   defp transform_label(at) do
     "<#{Utils.make_transform_label at, newline: false}>"
   end
+
+  defp maybe_results(_, %InternalState{mode: :consumer}), do: []
+  defp maybe_results(results, _), do: results
 end

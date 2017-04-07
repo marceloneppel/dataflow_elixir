@@ -27,11 +27,7 @@ defmodule Dataflow.DirectRunner.TransformEvaluator do
 
   @callback produce_elements(pos_integer, state) :: {[element], state}
 
-  @callback transform_element(element, state) :: {[element], state}
   @callback transform_elements([element], state) :: {[element], state}
-
-  @callback consume_element(element, state) :: state
-  @callback consume_elements([element], state) :: state
 
   @callback fire_timers([timer], state) :: {[element], state}
 
@@ -43,8 +39,7 @@ defmodule Dataflow.DirectRunner.TransformEvaluator do
 
   @optional_callbacks \
     produce_elements: 2,
-    transform_element: 2, transform_elements: 2,
-    consume_element: 2, consume_elements: 2,
+    transform_elements: 2,
     fire_timers: 2,
     handle_async: 2
 

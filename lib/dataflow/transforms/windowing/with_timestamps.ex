@@ -26,12 +26,13 @@ defmodule Dataflow.Transforms.Windowing.WithTimestamps do
       |> maybe_watermark(opts[:no_watermark], opts[:delay_watermark])
     end
 
-    defp maybe_watermark(input, true, delay) do
+    defp maybe_watermark(input, true, _), do: input
+    defp maybe_watermark(input, _, delay) do
       opts = maybe_delay(delay)
       input
       ~> Windowing.watermark(opts)
     end
-    defp maybe_watermark(input, _, _), do: input
+
 
     defp maybe_delay(nil), do: []
     defp maybe_delay(delay), do: [delay: delay]

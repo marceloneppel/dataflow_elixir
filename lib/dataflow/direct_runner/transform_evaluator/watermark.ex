@@ -5,6 +5,8 @@ defmodule Dataflow.DirectRunner.TransformEvaluator.Watermark do
   alias Dataflow.Transforms.Windowing.Watermark, as: WatermarkXform
   alias Dataflow.DirectRunner.TimingManager, as: TM
 
+  require Logger
+
   defstruct [:timing_manager, :delay, :high_wm]
 
   def timing_manager_options do
@@ -27,7 +29,9 @@ defmodule Dataflow.DirectRunner.TransformEvaluator.Watermark do
         state
       else
         state = %{state | high_wm: latest_wm}
-        TM.advance_desired_lowm(state.timing_manager, desired_lowm(state))
+        desired_wm = desired_lowm(state)
+        TM.advance_desired_lowm(state.timing_manager, desired_wm)
+        Logger.debug fn -> "High watermark is #{inspect latest_wm}, advanced the desired watermark to #{inspect desired_wm}" end
         %{state | high_wm: latest_wm}
       end
 

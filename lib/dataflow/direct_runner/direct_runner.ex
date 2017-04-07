@@ -19,14 +19,26 @@ defmodule Dataflow.DirectRunner do
 
     # Get leaf transforms & consumer map and extract some variables
 
-    {leaf_transforms, _consumers} = calculate_transforms_consumers(state)
+    {leaf_transforms, consumers} = calculate_transforms_consumers(state)
     %{transforms: _transforms, values: values} = state
 
 #    Logger.debug "VALUES:\n\n#{Apex.Format.format values}"
 #    Logger.debug "TRANSFORMS:\n\n#{Apex.Format.format transforms}"
 #    Logger.debug "LEAF TRANSFORMS:\n\n#{Apex.Format.format leaf_transforms |> Map.keys}"
 
-    # TODO Verify that all values are actually being consumed? (but what about sinks)
+    # check for any values which are not being consumed, and modify them to be dummies
+    non_consumed_values =
+      consumers
+      |> Enum.filter_map(fn {value, consumers} -> consumers == [] end, fn {value, consumers} -> value end)
+
+    values =
+      non_consumed_values
+      |> Enum.reduce(values,
+        fn dummy_id, values ->
+          Map.update!(values, dummy_id, fn val ->
+            %{val | type: :dummy}
+          end)
+        end)
 
     {:ok, pid} = PipelineSupervisor.start_link(leaf_transforms, values)
 
@@ -40,23 +52,34 @@ defmodule Dataflow.DirectRunner do
   end
 
   defp calculate_transforms_consumers(%State{transforms: transforms, values: values}) do
+    consumers = for {value_id, _} <- values, into: %{}, do: {value_id, []}
+
     transforms
     |> Map.values
     |> Enum.reduce({%{}, %{}}, calculate_transforms_consumers_reducer(values))
   end
 
-  defp calculate_transforms_consumers_reducer(_values) do
+  defp calculate_transforms_consumers_reducer(values) do
     fn
       %AppliedTransform{id: transform_id, input: input_id, parts: []} = at,
       {leaf_xforms, consumers} ->
       # No parts, hence a leaf transform.
-      {Map.put(leaf_xforms, transform_id, at), add_consumer_to_list(consumers, input_id, transform_id)}
+      {Map.put(leaf_xforms, transform_id, at), add_consumer_to_list(consumers, input_id, transform_id, values)}
 
       _, acc -> acc # composite transform, so ignore
     end
   end
 
-  defp add_consumer_to_list(consumers, value_id, consumer_id) do
-    Map.update(consumers, value_id, [consumer_id], fn cs_list -> [consumer_id | cs_list] end)
+  defp add_consumer_to_list(consumers, value_id, consumer_id, values) do
+    consumers = Map.update(consumers, value_id, [consumer_id], fn cs_list -> [consumer_id | cs_list] end)
+
+    # Check for proxy values
+    value = values[value_id]
+    case value.type do
+      :proxy ->
+        {:proxy, from_id} = value.producer
+        add_consumer_to_list(consumers, from_id, consumer_id, values)
+      _ -> consumers
+    end
   end
 end

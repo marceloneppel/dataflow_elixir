@@ -26,18 +26,20 @@ p
     [] -> []
     list ->
       list
-      |> Enum.map(fn %{text: text} -> String.downcase text end)
+      |> Enum.map(fn %{text: text} -> text end)
   end
  end)
 ~> Aggregation.count_elements()
 ~> Core.flat_map(fn {tag, count} ->
   len = String.length tag
-  for i <- 0..(len-1), prefix = String.slice(tag, 0..i), do: {prefix, {tag, count}}
+  for i <- 0..(len-1), downcased = String.downcase(tag), prefix = String.slice(downcased, 0..i), do: {prefix, {tag, count}}
  end)
-~> Aggregation.top_per_key(compare: fn {_prefix1, {_tag1, count1}}, {_prefix2, {_tag2, count2}} -> count1 <= count2 end)
+~> Aggregation.top_per_key(3, compare: fn {_tag1, count1}, {_tag2, count2} -> count1 <= count2 end)
 ~> Core.map(fn {prefix, tcs} -> {prefix, Enum.map(tcs, fn {tag, _count} -> tag end)} end)
-~> Core.each(fn x -> IO.puts "#{inspect x}" end)
+~> Core.each(fn x -> Elixir.IO.puts "#{inspect x}" end)
+~> Core.map(fn x -> x end)
 #~> IO.send_to_process(autocomplete, mode: :batch)
 
 Pipeline.run p, sync: true
 #Dataflow.Utils.PipelineVisualiser.visualise p
+#Apex.ap Pipeline._get_state(p)

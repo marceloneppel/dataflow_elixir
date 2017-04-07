@@ -10,12 +10,8 @@ defmodule Dataflow.Utils do
 
   def make_transform_label(_transform, _opts \\ [])
 
-  def make_transform_label(%AppliedTransform{label: nil, transform: transform}, _opts) do
-    get_label_from_transform(transform)
-  end
-
-  def make_transform_label(%AppliedTransform{label: "", transform: transform}, _opts) do
-    get_label_from_transform(transform)
+  def make_transform_label(%AppliedTransform{label: l, transform: transform, id: id}, _opts) when l == nil or l == "" do
+    "##{id} {#{get_label_from_transform(transform)}}"
   end
 
   def make_transform_label(%AppliedTransform{id: id, label: label, transform: transform}, opts) do
