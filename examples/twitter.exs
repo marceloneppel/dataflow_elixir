@@ -1,9 +1,5 @@
 use Dataflow
 alias Dataflow.Transforms.{Core, IO, Windowing, Aggregation}
-use IO.ReadStream
-use IO.WriteFile
-use Core.GroupByKey
-use Core.CombineGlobally
 alias Dataflow.Transforms.Fns.CombineFn
 alias Dataflow.DirectRunner
 
@@ -17,7 +13,7 @@ parse_as_timestamp = fn string ->
   |> DTime.timestamp(:seconds)
 end
 
-autocomplete = Autocompleter.start_link
+#autocomplete = Autocompleter.start_link
 
 p = Pipeline.new runner: DirectRunner
 
