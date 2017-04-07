@@ -28,4 +28,17 @@ defmodule Dataflow.Utils do
     |> Atom.to_string
     |> String.replace_leading("Elixir.Dataflow.Transforms.", "")
   end
+
+  def verify_opts!(opts, allowed) do
+    unless Keyword.keyword? opts do
+      raise "Must pass in a keyword list"
+    end
+
+    Enum.each opts, fn {key, _} ->
+      cond do
+        key in allowed -> :ok
+        true -> raise "#{key} is an unrecognised option"
+      end
+    end
+  end
 end

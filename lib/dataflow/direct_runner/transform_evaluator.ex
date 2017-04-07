@@ -39,6 +39,8 @@ defmodule Dataflow.DirectRunner.TransformEvaluator do
 
   @callback finish(state) :: :ok | {:error, any}
 
+  @callback timing_manager_options :: keyword
+
   @optional_callbacks \
     produce_elements: 2,
     transform_element: 2, transform_elements: 2,
@@ -48,25 +50,16 @@ defmodule Dataflow.DirectRunner.TransformEvaluator do
 
 
   defmacro __using__(opts) do
-    blocks = [
-      quote do
-        @behaviour unquote(__MODULE__)
-      end
-    ]
-    ++
-    case opts[:type] do
-      :reducing -> [] # require the user to implement this
-      t when t == nil or t == :elementwise -> [
-        quote do
-          def update_input_watermark(new_watermark, state), do: {[], {:update, new_watermark}, state}
-        end
-      ]
-    end
+    quote do
+      @behaviour unquote(__MODULE__)
 
-    blocks
+      def timing_manager_options, do: []
+
+      defoverridable timing_manager_options: 0
+    end
   end
 
-  alias Dataflow.Transforms.{Core, IO}
+  alias Dataflow.Transforms.{Core, IO, Windowing}
   alias Dataflow.DirectRunner.{TransformEvaluator, ReducingEvaluator}
 
   def module_for(%Core.ParDo{}), do: TransformEvaluator.ParDo
@@ -75,6 +68,9 @@ defmodule Dataflow.DirectRunner.TransformEvaluator do
 
   def module_for(%IO.ReadFile{}), do: TransformEvaluator.ReadFile
   def module_for(%IO.WriteFile{}), do: TransformEvaluator.WriteFile
+  def module_for(%IO.ReadStream{}), do: TransformEvaluator.ReadStream
+
+  def module_for(%Windowing.Watermark{}), do: TransformEvaluator.Watermark
 
 
   def module_for(%{__struct__: module}), do: raise "No evaluator available for transform #{module}"

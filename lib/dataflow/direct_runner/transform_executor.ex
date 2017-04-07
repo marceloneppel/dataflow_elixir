@@ -86,11 +86,13 @@ defmodule Dataflow.DirectRunner.TransformExecutor do
         [subscribe_to: [via_transform_registry(input.producer)]]
       end
 
-    {:ok, timing_manager} = TM.start_linked()
+    evaluator_module = Dataflow.DirectRunner.TransformEvaluator.module_for transform
+    tm_opts = evaluator_module.timing_manager_options
+
+    {:ok, timing_manager} = TM.start_linked(tm_opts)
 
     Logger.debug "Options: #{inspect opts}"
 
-    evaluator_module = Dataflow.DirectRunner.TransformEvaluator.module_for transform
     {:ok, evaluator_state} = evaluator_module.init(transform, input, timing_manager)
 
 
