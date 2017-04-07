@@ -291,7 +291,7 @@ defmodule Dataflow.DirectRunner.TimingManager do
     # -- the current WM hold
 
     base_wm =
-      case state.manage_owm_lowm? do
+      case state.manage_own_lowm? do
         true -> state.desired_lowm
         false -> state.liwm
       end

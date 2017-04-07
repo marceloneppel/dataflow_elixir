@@ -113,7 +113,7 @@ defmodule Dataflow.Transforms.Windowing.Window do
 
       strategy = struct!(current_strategy, fields)
 
-      fresh_pvalue input, from: input, windowing_strategy: strategy
+      proxy_pvalue(input, from: input, windowing_strategy: strategy)
       ~> "PerformWindowing" -- Core.par_do(windowing_dofn(strategy.window_fn))
     end
 
@@ -121,7 +121,7 @@ defmodule Dataflow.Transforms.Windowing.Window do
       %DoFn{
         process: fn {el, timestamp, windows, opts} ->
           new_windows = WindowFnC.assign(window_fn, timestamp, el, windows)
-          {el, timestamp, new_windows, opts} # todo check if this is totally valid
+          [{el, timestamp, new_windows, opts}] # todo check if this is totally valid
         end
       }
     end

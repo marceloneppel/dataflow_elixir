@@ -7,6 +7,7 @@ defmodule Dataflow.Utils.PipelineVisualiser do
   alias Dataflow.Pipeline.AppliedTransform
   alias Dataflow.PValue
   import Dataflow.Utils
+  require Logger
 
   def visualise(pipeline) do
     pipeline
@@ -43,6 +44,11 @@ defmodule Dataflow.Utils.PipelineVisualiser do
   defp get_value(values, value_id), do: Map.fetch! values, value_id
 
   defp get_data_edges(_consumer_id, %PValue{type: :dummy}) do
+    []
+  end
+
+  defp get_data_edges(consumer_id, %PValue{producer: {:proxy, value_id}, label: label}) do
+    Logger.warn("Proxy values detected but not implemented yet.")
     []
   end
 

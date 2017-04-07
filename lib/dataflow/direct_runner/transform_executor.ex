@@ -57,6 +57,13 @@ defmodule Dataflow.DirectRunner.TransformExecutor do
     Dataflow.DirectRunner.ValueStore.get(value_id)
   end
 
+  defp get_producer(value) do
+    case value do
+      %{producer: {:proxy, from}} -> get_producer(get_value(from))
+      %{producer: producer} -> producer
+    end
+  end
+
   def start_link(%AppliedTransform{id: id} = transform) do
     GenStage.start_link(__MODULE__, transform, name: via_transform_registry(id))
   end
@@ -83,7 +90,7 @@ defmodule Dataflow.DirectRunner.TransformExecutor do
       if PValue.dummy? input do
         []
       else
-        [subscribe_to: [via_transform_registry(input.producer)]]
+        [subscribe_to: [via_transform_registry(get_producer(input))]]
       end
 
     evaluator_module = Dataflow.DirectRunner.TransformEvaluator.module_for transform

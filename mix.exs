@@ -31,9 +31,13 @@ defmodule Dataflow.Mixfile do
       {:ex_doc, "~> 0.14", only: :dev},
       {:credo, "~> 0.5", only: [:dev, :test]},
       {:gen_stage, "~> 0.11"},
-      {:apex, "~>0.7.0"},
+      {:apex, "~>1.0.0"},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
-      {:extwitter, "~> 0.8"}
+
+      # these are for examples only.
+      #TODO refactor into separate app
+      {:extwitter, "~> 0.8"},
+      {:timex, "~> 3.0"}
     ]
   end
 end

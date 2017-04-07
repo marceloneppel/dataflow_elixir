@@ -3,6 +3,8 @@ defmodule Dataflow.Transforms.Aggregation do
 
   export_transforms [
     CountPerKey: 0,
-    TopPerKey: [1, 2]
+    TopPerKey: [1, 2],
+    CountElements: 0
   ]
+
 end

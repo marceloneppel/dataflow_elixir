@@ -14,28 +14,28 @@ defmodule Dataflow.Transforms.Core.CombineValues do
 
       #todo typings
       input
-      ~> Core.par_do(combine_do_fn(fun))
+      ~> Core.map(combine(fun))
     end
 
 
-    defp combine_do_fn(%CombineFn{} = fun) do
+    defp combine(%CombineFn{} = fun) do
       alias Dataflow.Transforms.Fns.DoFn
 
-      DoFn.from_function(
-        fn {key, enum}, _timestamp, _windows, _label, _state ->
-          # Expected elements input to this DoFn are 2-tuples of the form
-          # `{key, enum}`, with `iter` an enumerable of all the values associated with `key`
-          # in the input PCollection.
 
-          combined =
-            fun
-            |> CombineFn.p_create_accumulator
-            |> CombineFn.p_add_inputs(enum)
-            |> CombineFn.p_extract_output
+      fn {key, enum} ->
+        # Expected elements input to this DoFn are 2-tuples of the form
+        # `{key, enum}`, with `iter` an enumerable of all the values associated with `key`
+        # in the input PCollection.
 
-          {key, combined}
-        end
-      )
+        combined =
+          fun
+          |> CombineFn.p_create_accumulator
+          |> CombineFn.p_add_inputs(enum)
+          |> CombineFn.p_extract_output
+
+        {key, combined}
+      end
+
     end
   end
 

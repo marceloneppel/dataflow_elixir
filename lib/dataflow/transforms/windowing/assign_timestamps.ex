@@ -23,7 +23,7 @@ defmodule Dataflow.Transforms.Windowing.AssignTimestamps do
           # Assuming that opts can stay the same (but e.g. pane data may be invalid? not with keeping windows the same however)
 
           new_timestamp = timestamp_fn.(el)
-          {el, new_timestamp, windows, opts}
+          [{el, new_timestamp, windows, opts}]
         end
       }
     end
