@@ -17,11 +17,11 @@ end
 p = Pipeline.new runner: DirectRunner
 
 p
-~> IO.read_stream(fn -> ExTwitter.stream_filter(track: "tech,technology,Apple,Google,Twitter,Facebook,Microsoft,iPhone,Mac,Android,computers,CompSci,science", language: "en") end)
+~> "Read Stream" -- IO.read_stream(fn -> ExTwitter.stream_filter(track: "tech,technology,Apple,Google,Twitter,Facebook,Microsoft,iPhone,Mac,Android,computers,CompSci,science", language: "en") end)
 #~> Core.flat_map(fn tweet -> for _ <- 1..500, do: tweet end)
-~> Windowing.with_timestamps(&parse_as_timestamp.(&1.created_at), delay_watermark: {30, :seconds, :event_time})
-~> Windowing.window(into: {:sliding, size: {1, :minutes}, period: {15, :seconds}})
-~> Core.flat_map(fn tweet ->
+~> "Extract Timestamps" -- Windowing.with_timestamps(&parse_as_timestamp.(&1.created_at), delay_watermark: {30, :seconds, :event_time})
+~> "Window Elements" -- Windowing.window(into: {:sliding, size: {1, :minutes}, period: {15, :seconds}})
+~> "Extract Hashtags" -- Core.flat_map(fn tweet ->
   case tweet.entities[:hashtags] do
     nil -> []
     [] -> []
@@ -31,13 +31,14 @@ p
   end
  end)
 ~> Aggregation.count_elements()
-~> Core.flat_map(fn {tag, count} ->
+~> "Generate Prefixes" -- Core.flat_map(fn {tag, count} ->
   len = String.length tag
   for i <- 0..(len-1), downcased = String.downcase(tag), prefix = String.slice(downcased, 0..i), do: {prefix, {tag, count}}
  end)
 ~> Aggregation.top_per_key(3, compare: fn {_tag1, count1}, {_tag2, count2} -> count1 <= count2 end)
-~> Core.map(fn {prefix, tcs} -> {prefix, Enum.map(tcs, fn {tag, _count} -> tag end)} end)
-~> "ShouldBeConsumer" -- Core.each(fn x -> Elixir.IO.puts "#{inspect x}" end)
+~> "Discard Exact Counts" -- Core.map(fn {prefix, tcs} -> {prefix, Enum.map(tcs, fn {tag, _count} -> tag end)} end)
+#~> "DisplayDebug" -- %Core.ParDo{do_fn: %Dataflow.Transforms.Fns.DoFn{process: fn el -> Apex.ap(el); [] end}}
+~> Core.each(fn x -> Elixir.IO.puts "#{inspect x}" end)
 #~> IO.send_to_process(autocomplete, mode: :batch)
 
 Pipeline.run p, sync: true
