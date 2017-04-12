@@ -31,6 +31,8 @@ defmodule Dataflow.DirectRunner do
       consumers
       |> Enum.filter_map(fn {value, consumers} -> consumers == [] end, fn {value, consumers} -> value end)
 
+    Logger.debug("Non consumed values: #{inspect non_consumed_values}")
+
     values =
       non_consumed_values
       |> Enum.reduce(values,
@@ -56,7 +58,7 @@ defmodule Dataflow.DirectRunner do
 
     transforms
     |> Map.values
-    |> Enum.reduce({%{}, %{}}, calculate_transforms_consumers_reducer(values))
+    |> Enum.reduce({%{}, consumers}, calculate_transforms_consumers_reducer(values))
   end
 
   defp calculate_transforms_consumers_reducer(values) do
@@ -71,7 +73,7 @@ defmodule Dataflow.DirectRunner do
   end
 
   defp add_consumer_to_list(consumers, value_id, consumer_id, values) do
-    consumers = Map.update(consumers, value_id, [consumer_id], fn cs_list -> [consumer_id | cs_list] end)
+    consumers = Map.update!(consumers, value_id, fn cs_list -> [consumer_id | cs_list] end)
 
     # Check for proxy values
     value = values[value_id]

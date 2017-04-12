@@ -17,8 +17,9 @@ end
 p = Pipeline.new runner: DirectRunner
 
 p
-~> IO.read_stream(fn -> ExTwitter.stream_filter(track: "tech,technology,Apple,Google,Twitter,Facebook,Microsoft,iPhone,Mac,Android,computers,CompSci", language: "en") end)
-~> Windowing.with_timestamps(&parse_as_timestamp.(&1.created_at), delay_watermark: {10, :seconds, :event_time})
+~> IO.read_stream(fn -> ExTwitter.stream_filter(track: "tech,technology,Apple,Google,Twitter,Facebook,Microsoft,iPhone,Mac,Android,computers,CompSci,science", language: "en") end)
+#~> Core.flat_map(fn tweet -> for _ <- 1..500, do: tweet end)
+~> Windowing.with_timestamps(&parse_as_timestamp.(&1.created_at), delay_watermark: {30, :seconds, :event_time})
 ~> Windowing.window(into: {:sliding, size: {1, :minutes}, period: {15, :seconds}})
 ~> Core.flat_map(fn tweet ->
   case tweet.entities[:hashtags] do
@@ -36,8 +37,7 @@ p
  end)
 ~> Aggregation.top_per_key(3, compare: fn {_tag1, count1}, {_tag2, count2} -> count1 <= count2 end)
 ~> Core.map(fn {prefix, tcs} -> {prefix, Enum.map(tcs, fn {tag, _count} -> tag end)} end)
-~> Core.each(fn x -> Elixir.IO.puts "#{inspect x}" end)
-~> Core.map(fn x -> x end)
+~> "ShouldBeConsumer" -- Core.each(fn x -> Elixir.IO.puts "#{inspect x}" end)
 #~> IO.send_to_process(autocomplete, mode: :batch)
 
 Pipeline.run p, sync: true
