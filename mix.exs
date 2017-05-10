@@ -37,7 +37,10 @@ defmodule Dataflow.Mixfile do
       # these are for examples only.
       #TODO refactor into separate app
       {:extwitter, "~> 0.8"},
-      {:timex, "~> 3.0"}
+      {:timex, "~> 3.0"},
+
+      # logging watermarks
+      {:nimble_csv, "~> 0.1.0"}
     ]
   end
 end

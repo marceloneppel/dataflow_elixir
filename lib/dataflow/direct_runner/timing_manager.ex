@@ -146,7 +146,7 @@ defmodule Dataflow.DirectRunner.TimingManager do
   # private processing
 
   defp do_set_timer(namespace, time, :event_time, state) do
-    # todo do we fire a timer now if the current time is past the timer time?
+    # todo do we fire a timer now if the current time is past the timer time? I think the Beam implementation disallows that altogether
     event_timers = PQ.put_unique state.event_timers, time, {namespace, time, :event_time}
     {:reply, :ok, %{state | event_timers: event_timers}}
   end

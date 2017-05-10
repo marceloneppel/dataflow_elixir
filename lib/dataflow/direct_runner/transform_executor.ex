@@ -145,6 +145,7 @@ defmodule Dataflow.DirectRunner.TransformExecutor do
   def handle_cast({:advance_owm, new_owm}, %InternalState{mode: mode} = ex_state) do
 #    Logger.debug fn -> "#{transform_label(ex_state.applied_transform)}: advancing output watermark to #{inspect new_owm}" end
     unless mode == :consumer, do: GenStage.async_notify(self(), {:watermark, new_owm})
+    log_owm(ex_state.applied_transform.id, new_owm)
     {:noreply, [], ex_state}
   end
 
@@ -162,4 +163,11 @@ defmodule Dataflow.DirectRunner.TransformExecutor do
 
   defp maybe_results(_, %InternalState{mode: :consumer}), do: []
   defp maybe_results(results, _), do: results
+
+  defp log_owm(id, owm) do
+    # todo take config
+
+    raw = owm |> Time.raw
+    Dataflow.DirectRunner.StatsCollector.log_output_watermark(id, raw)
+  end
 end

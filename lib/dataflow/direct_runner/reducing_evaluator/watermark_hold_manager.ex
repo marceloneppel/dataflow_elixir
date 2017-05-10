@@ -9,6 +9,10 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator.WatermarkHoldManager do
 
   @extra_otfn Dataflow.Window.OutputTimeFn.OutputAtEarliestInputTimestamp
 
+# todo consider from Docs:
+# The output watermark is also held by any outstanding event time timers.
+# It is allowed for them to output an element with that timestamp.
+
   def init() do
     %__MODULE__{}
   end
@@ -127,7 +131,7 @@ defmodule Dataflow.DirectRunner.ReducingEvaluator.WatermarkHoldManager do
 
     cond do
       lowm != :none && Time.before?(element_hold, lowm) ->
-        Logger.debug fn -> "Element hold #{inspect element_hold} is too late to effect output watermark." end
+        Logger.debug fn -> "Element hold #{inspect element_hold} is too late to affect output watermark." end
         {:none, state}
       Time.before?(Window.max_timestamp(window), liwm) ->
         Logger.debug fn -> "Element hold #{inspect element_hold} is too late for end-of-window timer." end
