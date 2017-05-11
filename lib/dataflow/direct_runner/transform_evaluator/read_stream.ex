@@ -9,9 +9,9 @@ defmodule Dataflow.DirectRunner.TransformEvaluator.ReadStream do
   alias Dataflow.DirectRunner.TimingManager, as: TM
   alias Dataflow.DirectRunner.TransformExecutor, as: TX
 
-  def init(%ReadStream{make_stream: mk_stream, chunk_size: csize}, input, timing_manager) do
+  def init(%ReadStream{make_stream: mk_stream, chunk_size: csize, full_elements?: felems?}, input, timing_manager) do
     unless (Dataflow.PValue.dummy? input), do: raise "Input to ReadStream must be a dummy."
-    {:ok, task_pid} = Task.start_link(streamer_task(mk_stream, csize))
+    {:ok, task_pid} = Task.start_link(streamer_task(mk_stream, csize, felems?))
     {:ok, {task_pid, timing_manager}}
   end
 
@@ -32,13 +32,19 @@ defmodule Dataflow.DirectRunner.TransformEvaluator.ReadStream do
     Task.shutdown(task_pid)
   end
 
-  defp streamer_task(make_stream, chunk_size) do
+  defp streamer_task(make_stream, chunk_size, felems?) do
     process = self()
     fn ->
       stream = make_stream.()
 
+      stream = if (felems?) do
+        stream
+      else
+        stream
+        |> Stream.map(fn el -> {el, Time.min_timestamp, [:global], []} end)
+      end
+
       stream
-      |> Stream.map(fn el -> {el, Time.min_timestamp, [:global], []} end)
       |> Stream.chunk(chunk_size, chunk_size, [])
       |> Stream.each(fn chunk -> TX.notify_evaluator process, {:chunk, chunk} end)
       |> Stream.run

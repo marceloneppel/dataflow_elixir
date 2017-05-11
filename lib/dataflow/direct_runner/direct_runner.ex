@@ -42,6 +42,9 @@ defmodule Dataflow.DirectRunner do
           end)
         end)
 
+    # todo this mostly for evaluation
+    IO.puts("--STARTED--")
+
     {:ok, pid} = PipelineSupervisor.start_link(leaf_transforms, values)
 
     if opts[:sync] do

@@ -14,7 +14,7 @@ defmodule Dataflow.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [extra_applications: [:logger]]
+    [extra_applications: [:erlexec, :exexec, :logger]]
   end
 
   # Dependencies can be Hex packages:
@@ -40,7 +40,10 @@ defmodule Dataflow.Mixfile do
       {:timex, "~> 3.0"},
 
       # logging watermarks
-      {:nimble_csv, "~> 0.1.0"}
+      {:nimble_csv, "~> 0.1.0"},
+
+      # test harness
+      {:exexec, "~> 0.1.0"}
     ]
   end
 end

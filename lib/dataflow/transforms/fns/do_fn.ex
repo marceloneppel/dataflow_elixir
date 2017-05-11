@@ -24,4 +24,12 @@ defmodule Dataflow.Transforms.Fns.DoFn do
       end
     }
   end
+
+  def from_function(fun) when is_function(fun, 4) do
+    %__MODULE__{
+      process: fn {el, timestamp, windows, opts} ->
+        fun.(el, timestamp, windows, opts)
+      end
+    }
+  end
 end

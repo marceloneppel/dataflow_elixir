@@ -3,14 +3,15 @@ defmodule Dataflow.DirectRunner.StatsCollector do
   alias NimbleCSV.RFC4180, as: CSV
 
   def start_link(log_path) do
-    GenServer.start_link(__MODULE__, log_path, name: __MODULE__)
+    path = Application.get_env(:dataflow_elixir, :stats_path, log_path)
+    GenServer.start_link(__MODULE__, path, name: __MODULE__)
   end
 
   # API
 
   def log_output_watermark(id, watermark) do
     proc_time =
-      System.os_time() # technically may not be monotonic
+      System.os_time(:microseconds) # technically may not be monotonic
 #      DateTime.utc_now()
 #      |> DateTime.to_unix
 
@@ -20,7 +21,8 @@ defmodule Dataflow.DirectRunner.StatsCollector do
   # callbacks
 
   def init(log_parent_path) do
-    path = Path.join(log_parent_path, "#{timestamp()}")
+    prefix = Application.get_env(:dataflow_elixir, :stats_prefix, timestamp())
+    path = Path.join(log_parent_path, prefix)
     File.mkdir_p! path
     {:ok, %{path: path, files: %{}}}
   end
@@ -49,7 +51,7 @@ defmodule Dataflow.DirectRunner.StatsCollector do
       false ->
         file_path = Path.join(state.path, "#{id}_owm.csv")
         file = File.open!(file_path, [:write, :raw])
-        header = CSV.dump_to_iodata([~w(proc_time, watermark)])
+        header = CSV.dump_to_iodata([~w(proc_time watermark)])
         :ok = IO.binwrite(file, header)
 
         put_in(state.files[id], file)
