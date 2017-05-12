@@ -11,7 +11,7 @@ defmodule Dataflow.Pipeline.NestedState do
 
     @opaque t :: pid
 
-    defstruct stack: [], new_values: [], new_transforms: [], fresh_id: nil, pipeline: nil
+    defstruct stack: [], new_values: [], new_transforms: [], fresh_id: nil, pipeline: nil, extra_opts: []
 
     def start_link(pipeline, fresh_id) do
       Agent.start_link(fn -> %__MODULE__{fresh_id: fresh_id, pipeline: pipeline} end)
@@ -19,6 +19,14 @@ defmodule Dataflow.Pipeline.NestedState do
 
     def push_context(pid, cid) do
       Agent.update(pid, fn %__MODULE__{stack: stack} = state -> %{state | stack: [{cid, []} | stack]} end)
+    end
+
+    def set_extra_opts(pid, opts) do
+      Agent.update(pid, fn state -> put_in(state.extra_opts, opts) end)
+    end
+
+    def get_extra_opts(pid) do
+      Agent.get(pid, fn state -> state.extra_opts end)
     end
 
     def pop_context(pid) do

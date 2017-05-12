@@ -144,10 +144,13 @@ defmodule Dataflow.Pipeline do
 
     #TODO: take account of labels and so forth
     #TODO: factor out non-critical section code for better concurrency
+    {_, extra_opts} = Keyword.pop(opts, :label, nil)
 
     # Set up the nested state tracker
     {:ok, nested_state} = NestedState.start_link(pipeline, fn -> fresh_id(state) end)
     nested_input = %NestedInput{value: value, state: nested_state}
+
+    NestedState.set_extra_opts(nested_state, extra_opts)
 
     NestedState.push_context(nested_state, 0) # Set the root transform as the root of the tree
     %NestedInput{value: output} = do_apply_transform(nested_input, transform, opts)  #Protocol polymorphism
@@ -205,6 +208,8 @@ defmodule Dataflow.Pipeline do
     # On invariant error the id pinned match will fail
 
     NestedState.add_value(state, output) # should this be handled by fresh_pvalue?
+    extra_opts = NestedState.get_extra_opts(state)
+
     NestedState.add_transform(state,
       %AppliedTransform{
         id: id,
@@ -214,7 +219,8 @@ defmodule Dataflow.Pipeline do
         input: nested_input.value.id, #inputs?
         output: output.id, #outputs?
         pipeline: NestedState.pipeline(state),
-        label: Keyword.get(opts, :label, "")
+        label: Keyword.get(opts, :label, ""),
+        extra_opts: extra_opts
       }
     )
 

@@ -10,23 +10,23 @@ defmodule Dataflow do
 
   defmacro pvalue ~> transform_with_label do
     case transform_with_label do
+      {:<>, _, [opts, transform]} ->
+        quote bind_quoted: [pvalue: pvalue, transform: transform, opts: opts] do
+          Dataflow.__apply_transform__(pvalue, transform, opts)
+        end
       {:--, _, [label, transform]} ->
-      quote bind_quoted: [pvalue: pvalue, transform: transform, label: label] do
-        Dataflow.__apply_transform__(pvalue, transform, label)
-       end
+        quote bind_quoted: [pvalue: pvalue, transform: transform, label: label] do
+          Dataflow.__apply_transform__(pvalue, transform, label: label)
+        end
       transform ->
-      quote bind_quoted: [pvalue: pvalue, transform: transform] do
-        Dataflow.__apply_transform__(pvalue, transform)
-      end
+        quote bind_quoted: [pvalue: pvalue, transform: transform] do
+          Dataflow.__apply_transform__(pvalue, transform, [])
+        end
     end
   end
 
-  def __apply_transform__(value, transform) do
-    do_apply_transform(value, transform, [])
-  end
-
-  def __apply_transform__(value, transform, label) when is_binary(label) do
-    do_apply_transform(value, transform, [label: label])
+  def __apply_transform__(value, transform, opts) do
+    do_apply_transform(value, transform, opts)
   end
 
   defp do_apply_transform(%Dataflow.PValue{pipeline: p} = value, transform, opts) do

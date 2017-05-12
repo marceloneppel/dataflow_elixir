@@ -16,7 +16,7 @@ p = Pipeline.new runner: DirectRunner
 
 p
 ~> "Read Stream" -- IO.read_stream(fn -> ExTwitter.stream_filter(track: "tech,technology,Apple,Google,Twitter,Facebook,Microsoft,iPhone,Mac,Android,computers,CompSci,science", language: "en") end)
-~> "Extract Timestamps" -- Windowing.with_timestamps(&parse_as_timestamp.(&1.created_at), delay_watermark: {30, :seconds, :event_time})
+~> [label: "Extract Timestamps", stats_id: "event_watermark"] <> Windowing.with_timestamps(&parse_as_timestamp.(&1.created_at), delay_watermark: {30, :seconds, :event_time})
 
 # The Java version combines stream reading and extraction, so to keep the comparison valid,
 # duplicate tweets after both have been done.
@@ -33,17 +33,13 @@ p
       |> Enum.map(fn %{text: text} -> text end)
   end
  end)
-~> Aggregation.count_elements()
+~> [stats_id: "fst_aggregate_watermark"] <> Aggregation.count_elements()
 ~> "Generate Prefixes" -- Core.flat_map(fn {tag, count} ->
   len = String.length tag
   for i <- 0..(len-1), downcased = String.downcase(tag), prefix = String.slice(downcased, 0..i), do: {prefix, {tag, count}}
  end)
 ~> Aggregation.top_per_key(3, compare: fn {_tag1, count1}, {_tag2, count2} -> count1 <= count2 end)
 ~> "Discard Exact Counts" -- Core.map(fn {prefix, tcs} -> {prefix, Enum.map(tcs, fn {tag, _count} -> tag end)} end)
-#~> "DisplayDebug" -- %Core.ParDo{do_fn: %Dataflow.Transforms.Fns.DoFn{process: fn el -> Apex.ap(el); [] end}}
-~> Core.each(fn x -> Elixir.IO.puts "#{inspect x}" end)
-#~> IO.send_to_process(autocomplete, mode: :batch)
+~> [stats_id: "output_watermark"] <> Core.each(fn x -> Elixir.IO.puts "#{inspect x}" end)
 
 Pipeline.run p, sync: true
-#Dataflow.Utils.PipelineVisualiser.visualise p
-#Apex.ap Pipeline._get_state(p)

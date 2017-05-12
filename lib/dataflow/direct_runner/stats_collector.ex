@@ -1,6 +1,8 @@
 defmodule Dataflow.DirectRunner.StatsCollector do
   use GenServer
   alias NimbleCSV.RFC4180, as: CSV
+  alias Dataflow.Utils.Time, as: DTime
+  require DTime
 
   def start_link(log_path) do
     path = Application.get_env(:dataflow_elixir, :stats_path, log_path)
@@ -12,10 +14,18 @@ defmodule Dataflow.DirectRunner.StatsCollector do
   def log_output_watermark(id, watermark) do
     proc_time =
       System.os_time(:microseconds) # technically may not be monotonic
-#      DateTime.utc_now()
-#      |> DateTime.to_unix
 
     GenServer.cast(__MODULE__, {:log_owm, id, watermark, proc_time})
+  end
+
+  def log_transform_owm(%{id: id, extra_opts: opts}, watermark) do
+    proc_time =
+          System.os_time(:microseconds) # technically may not be monotonic
+
+    case opts[:stats_id] do
+      nil -> :ok
+      stats_id -> GenServer.cast(__MODULE__, {:log_transform_owm, {id, stats_id}, watermark, proc_time})
+    end
   end
 
   # callbacks
@@ -25,6 +35,12 @@ defmodule Dataflow.DirectRunner.StatsCollector do
     path = Path.join(log_parent_path, prefix)
     File.mkdir_p! path
     {:ok, %{path: path, files: %{}}}
+  end
+
+  def handle_cast({:log_transform_owm, {id, stats_id}, watermark, proc_time}, state) do
+    owm = DTime.raw(watermark)
+    file_id = make_stats_transform_id(id, stats_id)
+    handle_cast({:log_owm, file_id, owm, proc_time}, state)
   end
 
   def handle_cast({:log_owm, id, watermark, proc_time} = msg, state) do
@@ -38,6 +54,10 @@ defmodule Dataflow.DirectRunner.StatsCollector do
     :ok = IO.binwrite(file, data)
 
     {:noreply, state}
+  end
+
+  defp make_stats_transform_id(id, stats_id) do
+    "#{stats_id}__#{id}"
   end
 
   def terminate(_, %{files: files}) do

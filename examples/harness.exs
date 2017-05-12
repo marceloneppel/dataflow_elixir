@@ -85,6 +85,7 @@ defmodule TestHarness do
 
   @log_main_path "../../eval-logs"
   @ps_interval 500
+  @jar_path "../dataflow-examples/out/artifacts/latency_test_jar/dataflow-examples.jar"
 
   def start_link(opts) do
     GenServer.start_link(__MODULE__, opts, name: __MODULE__)
@@ -142,16 +143,24 @@ defmodule TestHarness do
     Logger.debug("Starting execution of rep ##{pad(rep_no)}...")
 
     prefix = make_prefix(task, rep_no)
-    path = make_path(task, state)
 
     PSCollector.change_prefix(prefix)
 
     args =
-      task.args
-      |> Map.put(:log_prefix, prefix)
-      |> Map.put(:log_path, path)
+      case task.lang do
+        :elixir ->
+          path = make_path(task, state)
 
-    # TODO If soft runtime, add timeout to args
+          task.args
+          |> Map.put(:log_prefix, prefix)
+          |> Map.put(:log_path, path)
+        :java ->
+          path = make_full_path(task, rep_no, state)
+
+          task.args
+          |> Map.put(:full_log_path, path)
+          |> Map.put(:timeout, task.runtime)
+      end
 
     cmd = cmd(task.lang, task.test) ++ Enum.flat_map(args, &arg(task.lang, task.test, &1))
 
@@ -175,7 +184,6 @@ defmodule TestHarness do
       manager_pid: manager_pid,
       os_pid: os_pid,
       timer_ref: timer,
-      log_path: path,
       killed?: false,
       timer_kill: nil
     }
@@ -240,7 +248,7 @@ defmodule TestHarness do
     Logger.debug("Got successful termination.")
     # Successful termination.
     # cancel timer
-    Process.cancel_timer(state.timer_ref)
+    Process.cancel_timer(state.rundata.timer_ref)
 
     # All done. Process is done, time to do the next rep.
     schedule_next_rep()
@@ -263,9 +271,13 @@ defmodule TestHarness do
   defp handle_measure(state) do
     os_pid = state.rundata.os_pid
     cmd = [state.ps_path, "-p#{os_pid}", "-opcpu=", "-orss="]
-    {:ok, result} = Exexec.run(cmd, sync: true, stdout: true)
-    lines = Keyword.fetch!(result, :stdout)
-    send_measurement(lines, state)
+    case Exexec.run(cmd, sync: true, stdout: true) do
+      {:ok, result} ->
+        lines = Keyword.fetch!(result, :stdout)
+        send_measurement(lines, state)
+      {:error, _} ->
+        Logger.warn("Couldn't measure CPU/MEM. Possible that process exited from under us.")
+    end
 
     timer = schedule_measurement_timer(os_pid)
     state = put_in(state.rundata.timer_ref, timer)
@@ -310,6 +322,12 @@ end
     [mix, "run", "examples/latency.exs"]
   end
 
+  defp cmd(:java, :latency) do
+    java = System.find_executable("java")
+    jar = Path.expand(@jar_path)
+    [java, "-jar", jar]
+  end
+
   defp arg(:elixir, :latency, {:stream_delay, delay}) do
     ["--stream-delay", to_string(delay)]
   end
@@ -326,6 +344,22 @@ end
     ["--log-path", path]
   end
 
+  defp arg(:java, :latency, {:full_log_path, path}) do
+    ["--logPath=#{path}"]
+  end
+
+  defp arg(:java, :latency, {:timeout, timeout}) do
+    ["--timeoutSeconds=#{timeout}"]
+  end
+
+  defp arg(:java, :latency, {:num_transforms, num}) do
+    ["--numIdentityTransforms=#{num}"]
+  end
+
+  defp arg(:java, :latency, {:stream_delay, delay}) do
+    ["--minStreamElementDelay=#{delay}"]
+  end
+
   defp runtime_method(:elixir), do: :kill
   defp runtime_method(:java), do: :wait
 
@@ -339,6 +373,10 @@ end
 
   defp make_path(task, state) do
     Path.join([Path.expand(@log_main_path), log_subpath(state), "#{pad(task.index)}_#{task.lang}_#{task.test}_#{task.id}"])
+  end
+
+  defp make_full_path(task, rep, state) do
+    Path.join(make_path(task, state), make_prefix(task, rep))
   end
 
   defp make_schedule(nil) do
@@ -369,25 +407,61 @@ end
   end
 end
 
-transformnumbers = [1, 3, 8, 22, 60, 167, 464, 1292, 3594, 10000]
+require Logger
 
-tasks =
+experiment_name = "latency-test-linspace-2000-devel"
+transformnumbers = [1, 5, 10, 50, 200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000]
+repeat = 3
+runtime = 15
+stream_delay = 10
+
+make_id = fn num ->
+  "nt#{num}-sd#{stream_delay}-rt#{runtime}-x#{repeat}"
+end
+
+etasks =
   transformnumbers
   |> Enum.map(fn num ->
     %{
-      id: "nt#{num}",
+      id: make_id.(num),
       lang: :elixir,
       test: :latency,
-      repeat: 1,
-      runtime: 2,
+      repeat: repeat,
+      runtime: runtime,
       args: %{
-        stream_delay: 10,
+        stream_delay: stream_delay,
         num_transforms: num
       }
     }
    end)
 
-{:ok, pid} = TestHarness.start_link(tasks: tasks, name: "exonly2-logspace-testonly")
+jtasks =
+  transformnumbers
+  |> Enum.map(fn num ->
+    %{
+      id: make_id.(num),
+      lang: :java,
+      test: :latency,
+      repeat: repeat,
+      runtime: runtime,
+      args: %{
+        stream_delay: stream_delay,
+        num_transforms: num
+      }
+    }
+   end)
+
+tasks = etasks ++ jtasks
+
+duration_seconds = Enum.count(tasks) * repeat * (runtime + 1) # estimate 1 sec for setup
+duration_formatted =
+  duration_seconds
+  |> Timex.Duration.from_seconds()
+  |> Timex.Format.Duration.Formatter.format(:humanized)
+
+Logger.info("Approximate duration for execution will be #{duration_formatted}.")
+
+{:ok, pid} = TestHarness.start_link(tasks: tasks, name: experiment_name)
 ref = Process.monitor(pid)
 
 receive do
