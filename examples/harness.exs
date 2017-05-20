@@ -85,7 +85,7 @@ defmodule TestHarness do
 
   @log_main_path "../../eval-logs"
   @ps_interval 500
-  @jar_path "../dataflow-examples/out/artifacts/latency_test_jar/dataflow-examples.jar"
+  @jar_path "../dataflow-examples/out/artifacts/latency_test_flink_jar/dataflow-examples.jar"
 
   def start_link(opts) do
     GenServer.start_link(__MODULE__, opts, name: __MODULE__)
@@ -325,7 +325,16 @@ end
   defp cmd(:java, :latency) do
     java = System.find_executable("java")
     jar = Path.expand(@jar_path)
-    [java, "-jar", jar]
+    [java, "-Xss128m", "-Xmx10g", "-jar", jar]
+  end
+
+  defp cmd(:elixir, :twitter) do
+    mix = System.find_executable("mix")
+    [mix, "run", "examples/twitter.exs"]
+  end
+
+  defp arg(:elixir, :twitter, {:stream_multiply, factor}) do
+    ["--stream-multiply", to_string(factor)]
   end
 
   defp arg(:elixir, :latency, {:stream_delay, delay}) do
@@ -336,11 +345,11 @@ end
     ["--num-extra-transforms", to_string(num)]
   end
 
-  defp arg(:elixir, :latency, {:log_prefix, prefix}) do
+  defp arg(:elixir, _, {:log_prefix, prefix}) do
     ["--log-prefix", prefix]
   end
 
-  defp arg(:elixir, :latency, {:log_path, path}) do
+  defp arg(:elixir, _, {:log_path, path}) do
     ["--log-path", path]
   end
 
@@ -409,15 +418,34 @@ end
 
 require Logger
 
-experiment_name = "latency-test-linspace-2000-devel"
-transformnumbers = [1, 5, 10, 50, 200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000]
-repeat = 3
-runtime = 15
+experiment_name = "twitter-flink-full"
+#transformnumbers = [10, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1400, 1600, 1800, 2000]
+#transformnumbers = [1, 500, 1000, 1600, 2000]
+transformnumbers = [10, 100, 200, 300, 400, 500]
+repeat = 8
+runtime = 180
 stream_delay = 10
 
 make_id = fn num ->
   "nt#{num}-sd#{stream_delay}-rt#{runtime}-x#{repeat}"
 end
+
+stream_multiplies = [1, 10, 50, 100, 250, 500, 750, 1000, 10000]
+
+ettasks =
+  stream_multiplies
+  |> Enum.map(fn num ->
+    %{
+      id: make_id.(num),
+      lang: :elixir,
+      test: :twitter,
+      repeat: 1,
+      runtime: 9 * 60 + 15,
+      args: %{
+        stream_multiply: num,
+      }
+    }
+   end)
 
 etasks =
   transformnumbers
@@ -451,9 +479,13 @@ jtasks =
     }
    end)
 
-tasks = etasks ++ jtasks
+#tasks = etasks ++ jtasks
+tasks = ettasks ++ jtasks
+duration_seconds =
+  tasks
+  |> Enum.map(fn task -> (task.runtime+10) * task.repeat + 10 end)
+  |> Enum.sum()
 
-duration_seconds = Enum.count(tasks) * repeat * (runtime + 1) # estimate 1 sec for setup
 duration_formatted =
   duration_seconds
   |> Timex.Duration.from_seconds()
